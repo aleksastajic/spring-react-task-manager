@@ -5,31 +5,60 @@ import com.taskmanager.api.dto.AuthResponse;
 import com.taskmanager.api.entity.User;
 import com.taskmanager.api.service.AuthService;
 import com.taskmanager.api.service.UserService;
+import com.taskmanager.api.security.JwtUtils;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private final UserService userService;
+    /**
+     * Implementation of `AuthService` responsible for authenticating users and issuing JWTs.
+     */
 
-    public AuthServiceImpl(UserService userService) {
+    private final UserService userService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtils jwtUtils;
+
+    public AuthServiceImpl(UserService userService, AuthenticationManager authenticationManager, JwtUtils jwtUtils) {
         this.userService = userService;
+        this.authenticationManager = authenticationManager;
+        this.jwtUtils = jwtUtils;
     }
 
     @Override
     public AuthResponse login(AuthRequest authRequest) {
-        // JWT not implemented yet. This is a placeholder to be completed in security step.
-        throw new UnsupportedOperationException("Login not implemented yet");
+        /**
+         * Authenticate the user using `AuthenticationManager` and return a JWT token.
+         *
+         * @param authRequest credentials container (usernameOrEmail + password)
+         * @return `AuthResponse` containing the issued token
+         */
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(authRequest.getUsernameOrEmail(), authRequest.getPassword())
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String username = authentication.getName();
+        String token = jwtUtils.generateToken(username);
+        return new AuthResponse(token);
     }
 
     @Override
     public AuthResponse register(String username, String email, String password) {
+        /**
+         * Create a new user record and issue a JWT token for the created user.
+         *
+         * @return `AuthResponse` containing the token for the newly created account
+         */
         User user = new User();
         user.setUsername(username);
         user.setEmail(email);
         user.setDisplayName(username);
         User created = userService.createUser(user, password);
-        // return placeholder response; JWT issued in security step
-        return new AuthResponse(null);
+        String token = jwtUtils.generateToken(created.getUsername());
+        return new AuthResponse(token);
     }
 }

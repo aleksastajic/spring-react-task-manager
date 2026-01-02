@@ -1,11 +1,13 @@
 package com.taskmanager.api.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public class TeamDto {
 
     private Long id;
+    @NotBlank
     private String name;
     private String description;
     private List<UserDto> members;

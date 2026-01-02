@@ -15,6 +15,12 @@ import java.io.IOException;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    /**
+     * Servlet filter that extracts a Bearer JWT from the `Authorization` header,
+     * validates it and populates the Spring Security `SecurityContext` with the
+     * corresponding `UserDetails` when valid.
+     */
+
     private final JwtUtils jwtUtils;
     private final UserDetailsService userDetailsService;
 
@@ -47,6 +53,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private String parseJwt(HttpServletRequest request) {
+        /**
+         * Parse the `Authorization` header and return the raw JWT (without "Bearer ").
+         */
         String headerAuth = request.getHeader("Authorization");
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
             return headerAuth.substring(7);

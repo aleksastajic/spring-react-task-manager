@@ -14,6 +14,13 @@ import java.util.Date;
 @Component
 public class JwtUtils {
 
+    /**
+     * Utility for generating and validating JWT tokens used by the application.
+     * <p>
+     * The constructor expects a Base64-encoded secret configured via `jwt.secret` and
+     * an expiration timeout in milliseconds via `jwt.expiration`.
+     */
+
     private final Key key;
     private final long expirationMs;
 
@@ -24,6 +31,9 @@ public class JwtUtils {
     }
 
     public String generateToken(String subject) {
+        /**
+         * Build a signed JWT containing the provided subject as the token subject.
+         */
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationMs);
         return Jwts.builder()
@@ -35,6 +45,9 @@ public class JwtUtils {
     }
 
     public String getSubjectFromToken(String token) {
+        /**
+         * Parse the token and return the subject (typically the username).
+         */
         Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
         return claims.getSubject();
     }
