@@ -85,3 +85,8 @@ yarn-error.log
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Node (for React frontend)
+frontend/node_modules/
+frontend/dist/
+frontend/build/
