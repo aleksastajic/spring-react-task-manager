@@ -1,5 +1,6 @@
 package com.taskmanager.api.controller;
 
+
 import com.taskmanager.api.dto.TaskCreateDto;
 import com.taskmanager.api.dto.TaskDto;
 import com.taskmanager.api.entity.Task;
@@ -12,6 +13,9 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,6 +25,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/tasks")
+@Tag(name = "Tasks", description = "Endpoints for task management.")
 public class TaskController {
 
     private final TaskService taskService;
@@ -36,6 +41,7 @@ public class TaskController {
     /**
      * Create a new task from the provided `TaskCreateDto`.
      */
+    @Operation(summary = "Create task", description = "Create a new task from the provided TaskCreateDto.")
     @PostMapping
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<TaskDto> createTask(@Valid @RequestBody TaskCreateDto createDto) {
@@ -62,6 +68,7 @@ public class TaskController {
     /**
      * Retrieve a task by its id.
      */
+    @Operation(summary = "Get task by ID", description = "Retrieve a task by its ID.")
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskDto> getTask(@PathVariable Long id) {
@@ -72,6 +79,7 @@ public class TaskController {
     /**
      * List tasks for a given team id.
      */
+    @Operation(summary = "List tasks by team", description = "List all tasks for a given team ID.")
     @GetMapping("/team/{teamId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<TaskDto>> listByTeam(@PathVariable Long teamId) {

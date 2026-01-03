@@ -8,6 +8,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import org.springframework.security.access.AccessDeniedException;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,5 +40,12 @@ public class GlobalExceptionHandler {
         Map<String, Object> body = new HashMap<>();
         body.put("message", ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<?> handleAccessDenied(Exception ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("message", "Access Denied");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 }

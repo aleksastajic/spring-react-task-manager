@@ -1,11 +1,13 @@
 package com.taskmanager.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -21,6 +23,18 @@ class AuthIntegrationTest {
     private MockMvc mockMvc;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @BeforeEach
+    void cleanDb() {
+        jdbcTemplate.execute("DELETE FROM tasks");
+        jdbcTemplate.execute("DELETE FROM teams_members");
+        jdbcTemplate.execute("DELETE FROM teams");
+        jdbcTemplate.execute("DELETE FROM users_roles");
+        jdbcTemplate.execute("DELETE FROM users");
+        jdbcTemplate.execute("DELETE FROM roles");
+    }
 
     @Test
     void registerLoginAndGetUserFlow() throws Exception {

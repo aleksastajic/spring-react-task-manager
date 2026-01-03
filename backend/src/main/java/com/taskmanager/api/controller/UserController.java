@@ -8,6 +8,7 @@ import com.taskmanager.api.repository.UserRepository;
  * REST controller for user-related endpoints.
  * Provides profile endpoints for the currently authenticated user.
  */
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,10 +18,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
+@Tag(name = "Users", description = "Endpoints for user profile and information.")
 public class UserController {
 
     private final UserRepository userRepository;
@@ -29,15 +34,10 @@ public class UserController {
         this.userRepository = userRepository;
     }
 
+    @Operation(summary = "Get current user profile", description = "Return the profile of the currently authenticated user.")
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
-    /**
-     * Return the profile of the currently authenticated user.
-     *
-     * @return 200 with the populated `UserDto` when the user exists and is authenticated,
-     *         401 when no authentication is present, or 404 when the user record is missing.
-     */
     public ResponseEntity<UserDto> getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
