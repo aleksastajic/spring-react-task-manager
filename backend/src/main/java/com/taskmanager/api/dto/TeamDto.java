@@ -5,6 +5,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class TeamDto {
+    private UserDto admin;
+    public UserDto getAdmin() {
+        return admin;
+    }
+    public void setAdmin(UserDto admin) {
+        this.admin = admin;
+    }
 
     private Long id;
     @NotBlank

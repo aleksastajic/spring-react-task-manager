@@ -1,4 +1,4 @@
-package com.taskmanager.api.controller;
+    package com.taskmanager.api.controller;
 
 
 import com.taskmanager.api.dto.TaskCreateDto;
@@ -88,4 +88,81 @@ public class TaskController {
         return ResponseEntity.ok(dtos);
     }
     
+     /**
+     * Update a task by its id.
+     */
+    @Operation(summary = "Update task", description = "Update a task by its ID. Only creator, team admin, or assignee can update.")
+    @PatchMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<TaskDto> updateTask(@PathVariable Long id, @RequestBody TaskDto dto, @RequestHeader("Authorization") String authHeader) {
+        // Extract username from security context
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        Task updated = taskService.updateTask(id, dto, username);
+        return ResponseEntity.ok(taskMapper.toDto(updated));
+    }
+
+    /**
+     * Delete a task by its id.
+     */
+    @Operation(summary = "Delete task", description = "Delete a task by its ID. Only creator or team admin can delete.")
+    @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        taskService.deleteTask(id, username);
+        return ResponseEntity.noContent().build();
+    }
+    /**
+     * List tasks assigned to a specific user.
+     */
+    @Operation(summary = "List tasks for user", description = "List all tasks assigned to a specific user.")
+    @GetMapping("/user/{userId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<TaskDto>> listByUser(@PathVariable Long userId) {
+        List<Task> tasks = taskService.listTasksByUser(userId);
+        List<TaskDto> dtos = tasks.stream().map(taskMapper::toDto).collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+
+    /**
+     * Assign a user to a task.
+     */
+    @Operation(summary = "Assign user to task", description = "Assign a user to a task. Only admin or creator can assign.")
+    @PostMapping("/{taskId}/assignees/{userId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<TaskDto> assignUserToTask(@PathVariable Long taskId, @PathVariable Long userId) {
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        Task updated = taskService.assignUserToTask(taskId, userId, username);
+        return ResponseEntity.ok(taskMapper.toDto(updated));
+    }
+
+    /**
+     * Unassign a user from a task.
+     */
+    @Operation(summary = "Unassign user from task", description = "Unassign a user from a task. Only admin, creator, or the user themselves can unassign.")
+    @DeleteMapping("/{taskId}/assignees/{userId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<TaskDto> unassignUserFromTask(@PathVariable Long taskId, @PathVariable Long userId) {
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        Task updated = taskService.unassignUserFromTask(taskId, userId, username);
+        return ResponseEntity.ok(taskMapper.toDto(updated));
+    }
+
+    /**
+     * Change the status of a task.
+     */
+    @Operation(summary = "Change task status", description = "Change the status of a task. Only creator, admin, or assignee can change.")
+    @PatchMapping("/{taskId}/status")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<TaskDto> changeTaskStatus(@PathVariable Long taskId, @RequestBody StatusChangeRequest statusChangeRequest) {
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        Task updated = taskService.changeTaskStatus(taskId, statusChangeRequest.getStatus(), username);
+        return ResponseEntity.ok(taskMapper.toDto(updated));
+    }
+
+    public static class StatusChangeRequest {
+        private String status;
+        public String getStatus() { return status; }
+        public void setStatus(String status) { this.status = status; }
+    }
 }

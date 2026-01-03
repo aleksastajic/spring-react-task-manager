@@ -23,6 +23,7 @@ public class TeamMapper {
         dto.setDescription(t.getDescription());
         dto.setCreatedAt(t.getCreatedAt());
         if (t.getMembers() != null) dto.setMembers(t.getMembers().stream().map(userMapper::toDto).collect(Collectors.toList()));
+        if (t.getAdmin() != null) dto.setAdmin(userMapper.toDto(t.getAdmin()));
         return dto;
     }
 }

@@ -9,6 +9,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+import jakarta.persistence.ManyToOne;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -27,8 +28,12 @@ public class Team {
 
     private String description;
 
+
     @ManyToMany
     private Set<User> members = new HashSet<>();
+
+    @ManyToOne
+    private User admin;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -77,6 +82,14 @@ public class Team {
 
     public void setMembers(Set<User> members) {
         this.members = members;
+    }
+
+    public User getAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(User admin) {
+        this.admin = admin;
     }
 
     public LocalDateTime getCreatedAt() {

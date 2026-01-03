@@ -1,3 +1,4 @@
+
 package com.taskmanager.api.controller;
 
 
@@ -6,6 +7,8 @@ import com.taskmanager.api.entity.Team;
 import com.taskmanager.api.service.TeamService;
 import com.taskmanager.api.mapper.TeamMapper;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -40,9 +43,17 @@ public class TeamController {
     @PostMapping
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<TeamDto> createTeam(@Valid @RequestBody TeamDto dto) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(401).build();
+        }
+        String username = auth.getName();
+        com.taskmanager.api.entity.User creator = teamService.findUserByUsername(username);
         Team team = new Team();
         team.setName(dto.getName());
         team.setDescription(dto.getDescription());
+        team.setAdmin(creator);
+        team.getMembers().add(creator);
         Team created = teamService.createTeam(team);
         TeamDto out = teamMapper.toDto(created);
         return ResponseEntity.ok(out);
@@ -65,4 +76,42 @@ public class TeamController {
         return ResponseEntity.ok(dtos);
     }
     
+    @Operation(summary = "Update team info", description = "Update team name/description. Only admin can update.")
+    @PatchMapping("/{teamId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<TeamDto> updateTeam(@PathVariable Long teamId, @RequestBody TeamDto dto) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        Team updated = teamService.updateTeam(teamId, dto, username);
+        return ResponseEntity.ok(teamMapper.toDto(updated));
+    }
+
+    @Operation(summary = "Delete team", description = "Delete a team. Only admin can delete.")
+    @DeleteMapping("/{teamId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteTeam(@PathVariable Long teamId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        teamService.deleteTeam(teamId, username);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Remove member from team", description = "Remove a user from a team. Admin or self can remove.")
+    @DeleteMapping("/{teamId}/members/{userId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<TeamDto> removeMember(@PathVariable Long teamId, @PathVariable Long userId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        Team updated = teamService.removeMember(teamId, userId, username);
+        return ResponseEntity.ok(teamMapper.toDto(updated));
+    }
+
+    @Operation(summary = "List team members", description = "List all users in a team.")
+    @GetMapping("/{teamId}/members")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<com.taskmanager.api.dto.UserDto>> listMembers(@PathVariable Long teamId) {
+        List<com.taskmanager.api.entity.User> members = teamService.listMembers(teamId);
+        List<com.taskmanager.api.dto.UserDto> dtos = members.stream().map(teamService::toUserDto).toList();
+        return ResponseEntity.ok(dtos);
+    }
 }

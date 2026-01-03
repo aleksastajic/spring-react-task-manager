@@ -4,6 +4,13 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 public class UserDto {
+    private String password; // For update only, not returned in GET
+    public String getPassword() {
+        return password;
+    }
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
     private Long id;
     private String username;

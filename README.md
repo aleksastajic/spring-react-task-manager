@@ -61,10 +61,17 @@ See Swagger UI for full details and try out endpoints interactively.
 - `POST /api/teams/{teamId}/members/{userId}` — Add member to team (ADMIN role)
 - `GET /api/teams?userId={userId}` — List teams for a user
 
+
 **Tasks**
 - `POST /api/tasks` — Create a new task (USER role)
 - `GET /api/tasks/{id}` — Get task by ID
 - `GET /api/tasks/team/{teamId}` — List tasks for a team
+- `GET /api/tasks/user/{userId}` — List tasks assigned to a user
+- `PATCH /api/tasks/{id}` — Update a task (title, description, due date, priority, status, assignees)
+- `DELETE /api/tasks/{id}` — Delete a task (creator or admin)
+- `POST /api/tasks/{taskId}/assignees/{userId}` — Assign user to task (admin or creator)
+- `DELETE /api/tasks/{taskId}/assignees/{userId}` — Unassign user from task (admin, creator, or self)
+- `PATCH /api/tasks/{taskId}/status` — Change task status (creator, admin, or assignee)
 
 ### Troubleshooting
 - If Swagger UI loads but `/v3/api-docs` returns 500, check for dependency conflicts or exception handler issues.
@@ -155,8 +162,3 @@ The frontend is built with React and Vite. It is located in the `frontend/` dire
 
 ### Project Structure
 See [STRUCTURE.md](STRUCTURE.md) for a detailed backend package and file overview.
-
-### Next Steps
-- Add more unit and integration tests.
-- Add frontend (React) and CORS config.
-- Add Docker Compose for local dev.

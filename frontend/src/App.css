@@ -1,3 +1,211 @@
+/* Hamburger button (hidden on desktop) */
+.hamburger-btn {
+  display: none;
+  background: none;
+  border: none;
+  margin-left: 1rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+.hamburger-btn:hover {
+  background: rgba(0,137,123,0.12);
+}
+
+/* --- Side Drawer Overlay and Content --- */
+.side-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #00897b; /* Match navbar color, not transparent */
+  z-index: 2000;
+  display: none;
+  align-items: flex-start;
+  justify-content: flex-start;
+  transition: background 0.2s;
+}
+.side-drawer.open {
+  display: flex;
+}
+.drawer-content {
+  background: #26a69a; /* Slightly lighter green for contrast */
+  color: #fff;
+  width: 260px;
+  min-height: 100vh;
+  box-shadow: 2px 0 16px rgba(0,137,123,0.10);
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.drawer-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: var(--secondary);
+  cursor: pointer;
+}
+.drawer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+}
+.drawer-nav .nav-link, .drawer-nav button.nav-link {
+  color: var(--secondary);
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.drawer-nav .nav-link:hover, .drawer-nav button.nav-link:hover {
+  color: var(--primary);
+}
+
+body, #root {
+  background: #e8f5e9; /* Soft green background */
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+#root {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  text-align: initial;
+}
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  background: #00897b;
+  padding: 0.5rem 0;
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.nav-left {
+  display: flex;
+  gap: 32px;
+  margin-left: 0;
+}
+
+.nav-link {
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 1.1rem;
+  transition: color 0.2s;
+}
+.nav-link:hover {
+  color: var(--accent);
+  text-shadow: 0 1px 4px rgba(0,137,123,0.12);
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  margin-right: 2rem;
+}
+
+.profile-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s;
+}
+.profile-btn:hover {
+  background: rgba(0,137,123,0.08);
+}
+
+.profile-dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 120%;
+  background: #00897b; /* Match navbar and drawer */
+  color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,137,123,0.18);
+  min-width: 140px;
+  padding: 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 200;
+}
+
+.dropdown-item {
+  background: none;
+  border: none;
+  color: #fff;
+  text-align: left;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+.dropdown-item:hover {
+  background: #26a69a;
+  color: #fff;
+}
+
+/* General button styles */
+button {
+  background: var(--secondary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+button:hover {
+  background: var(--primary);
+}
+
+/* Card and surface backgrounds */
+.card, .surface {
+  background: #f1f8e9; /* Very light green for cards/surfaces */
+  color: var(--text-primary);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 2em;
+}
+
+/* Error text */
+.error {
+  color: var(--error);
+}
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -39,4 +247,22 @@
 
 .read-the-docs {
   color: #888;
+}
+
+@media (max-width: 900px) {
+  .navbar {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  .nav-left {
+    display: none !important;
+  }
+  .hamburger-btn {
+    display: block;
+  }
+}
+
+/* --- Main content padding to prevent overlap with navbar --- */
+.main-content {
+  padding-top: 64px;
 }
