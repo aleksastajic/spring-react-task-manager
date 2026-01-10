@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Table;
 import jakarta.persistence.Column;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 
@@ -37,6 +39,11 @@ public class User {
 	private Set<Team> teams = new HashSet<>();
 
 	@ManyToMany
+	@JoinTable(
+		name = "users_roles",
+		joinColumns = @JoinColumn(name = "user_id"),
+		inverseJoinColumns = @JoinColumn(name = "role_id")
+	)
 	private Set<Role> roles = new HashSet<>();
 
 	private LocalDateTime createdAt;

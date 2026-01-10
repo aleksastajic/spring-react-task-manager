@@ -1,4 +1,3 @@
-/* Hamburger button (hidden on desktop) */
 .hamburger-btn {
   display: none;
   background: none;
@@ -10,17 +9,16 @@
   transition: background 0.2s;
 }
 .hamburger-btn:hover {
-  background: rgba(0,137,123,0.12);
+  background: rgba(10,132,130,0.12);
 }
 
-/* --- Side Drawer Overlay and Content --- */
 .side-drawer {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: #00897b; /* Match navbar color, not transparent */
+  background: rgba(11,117,117,0.9);
   z-index: 2000;
   display: none;
   align-items: flex-start;
@@ -31,11 +29,11 @@
   display: flex;
 }
 .drawer-content {
-  background: #26a69a; /* Slightly lighter green for contrast */
-  color: #fff;
-  width: 260px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  width: 300px;
   min-height: 100vh;
-  box-shadow: 2px 0 16px rgba(0,137,123,0.10);
+  box-shadow: 2px 0 24px rgba(2,6,23,0.08);
   padding: 2rem 1.5rem 1.5rem 1.5rem;
   display: flex;
   flex-direction: column;
@@ -48,33 +46,47 @@
   background: none;
   border: none;
   font-size: 2rem;
-  color: var(--secondary);
+  color: var(--color-text);
   cursor: pointer;
 }
 .drawer-nav {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
   margin-top: 2.5rem;
 }
 .drawer-nav .nav-link, .drawer-nav button.nav-link {
-  color: var(--secondary);
+  color: var(--color-text);
   background: none;
   border: none;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   text-align: left;
   padding: 0;
   cursor: pointer;
   text-decoration: none;
-  transition: color 0.2s;
+  transition: color 0.15s;
 }
 .drawer-nav .nav-link:hover, .drawer-nav button.nav-link:hover {
+  color: var(--color-primary);
+}
+
+/* Active state for nav links */
+.nav-link.active, .nav-link[aria-current="page"] {
   color: var(--primary);
 }
 
+:root {
+  --primary: #0EA5A8;
+  --primary-dark: #0B7575;
+  --accent: #646CFF;
+  --surface: #ffffff;
+  --background: #F8FAFC;
+  --text-primary: #0F172A;
+}
+
 body, #root {
-  background: #e8f5e9; /* Soft green background */
+  background: var(--background);
   color: var(--text-primary);
   margin: 0;
   padding: 0;
@@ -94,32 +106,49 @@ body, #root {
   top: 0;
   left: 0;
   width: 100vw;
-  background: #00897b;
+  background: var(--primary-dark);
   padding: 0.5rem 0;
   margin: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
   z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgba(2,6,23,0.06);
 }
 
 .nav-left {
   display: flex;
-  gap: 32px;
+  gap: 24px;
   margin-left: 0;
+}
+
+/* Full-width header container so brand and nav are flush to left edge */
+.app-header {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+}
+
+.app-header .header-brand {
+  margin-right: 0.75rem;
 }
 
 .nav-link {
   color: #fff;
   font-weight: 600;
   text-decoration: none;
-  font-size: 1.1rem;
-  transition: color 0.2s;
+  font-size: 1.05rem;
+  transition: color 0.15s, transform 0.12s;
 }
 .nav-link:hover {
-  color: var(--accent);
-  text-shadow: 0 1px 4px rgba(0,137,123,0.12);
+  /* Softer, high-contrast hover suitable for dark header */
+  color: rgba(255,255,255,0.92);
+  transform: translateY(-0.5px);
 }
 
 .nav-right {
@@ -139,7 +168,7 @@ body, #root {
   transition: background 0.2s;
 }
 .profile-btn:hover {
-  background: rgba(0,137,123,0.08);
+  background: rgba(10,132,130,0.08);
 }
 
 .profile-dropdown {
@@ -150,12 +179,12 @@ body, #root {
   position: absolute;
   right: 0;
   top: 120%;
-  background: #00897b; /* Match navbar and drawer */
-  color: #fff;
+  background: var(--surface);
+  color: var(--text-primary);
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0,137,123,0.18);
-  min-width: 140px;
-  padding: 0.5rem 0;
+  box-shadow: 0 8px 30px rgba(2,6,23,0.08);
+  min-width: 160px;
+  padding: 0.25rem 0;
   display: flex;
   flex-direction: column;
   z-index: 200;
@@ -164,20 +193,18 @@ body, #root {
 .dropdown-item {
   background: none;
   border: none;
-  color: #fff;
+  color: var(--text-primary);
   text-align: left;
-  padding: 0.75rem 1.25rem;
-  font-size: 1rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
   cursor: pointer;
   text-decoration: none;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.12s, color 0.12s;
 }
 .dropdown-item:hover {
-  background: #26a69a;
-  color: #fff;
+  background: rgba(2,6,23,0.04);
 }
 
-/* General button styles */
 button {
   background: var(--secondary);
   color: #fff;
@@ -192,25 +219,23 @@ button:hover {
   background: var(--primary);
 }
 
-/* Card and surface backgrounds */
 .card, .surface {
-  background: #f1f8e9; /* Very light green for cards/surfaces */
+  background: var(--background);
   color: var(--text-primary);
   border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgba(2,6,23,0.04);
   padding: 2em;
 }
 
-/* Error text */
 .error {
   color: var(--error);
 }
 
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
 }
 
 .logo {
@@ -260,9 +285,11 @@ button:hover {
   .hamburger-btn {
     display: block;
   }
+  .header-profile {
+    display: none;
+  }
 }
 
-/* --- Main content padding to prevent overlap with navbar --- */
 .main-content {
-  padding-top: 64px;
+  padding-top: 56px; /* matches header height */
 }

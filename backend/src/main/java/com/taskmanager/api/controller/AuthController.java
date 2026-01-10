@@ -2,7 +2,6 @@ package com.taskmanager.api.controller;
 
 import com.taskmanager.api.dto.AuthRequest;
 import com.taskmanager.api.dto.AuthResponse;
-import com.taskmanager.api.entity.User;
 import com.taskmanager.api.service.AuthService;
 import com.taskmanager.api.dto.RegisterRequest;
 
@@ -37,6 +36,10 @@ public class AuthController {
         this.authService = authService;
     }
 
+    /**
+     * Authentication endpoints for login and registration. The controller
+     * delegates to `AuthService` for business logic and token issuance.
+     */
 
     @Operation(summary = "Login", description = "Authenticate a user and return a JWT token.")
     @PostMapping("/login")
@@ -45,17 +48,16 @@ public class AuthController {
         return ResponseEntity.ok(resp);
     }
 
-
     @Operation(summary = "Register", description = "Register a new user and return a JWT token.")
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        try {
-            logger.debug("Register request for username={}", request.getUsername());
-            AuthResponse resp = authService.register(request.getUsername(), request.getEmail(), request.getPassword());
-            return ResponseEntity.ok(resp);
-        } catch (Exception ex) {
-            logger.error("Register failed: {}", ex.getMessage(), ex);
-            return ResponseEntity.status(500).build();
-        }
+        logger.debug("Register request for username={}", request.getUsername());
+        AuthResponse resp = authService.register(
+                request.getUsername(),
+                request.getEmail(),
+                request.getPassword(),
+                request.getDisplayName()
+        );
+        return ResponseEntity.ok(resp);
     }
 }

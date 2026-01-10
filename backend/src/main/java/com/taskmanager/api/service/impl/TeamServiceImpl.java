@@ -19,6 +19,11 @@ import com.taskmanager.api.mapper.TeamMapper;
 import com.taskmanager.api.mapper.UserMapper;
 import java.util.ArrayList;
 
+/**
+ * Implementation of {@link com.taskmanager.api.service.TeamService}.
+ * Manages team lifecycle, membership and basic team queries. Methods
+ * perform authorization checks based on the acting username.
+ */
 @Service
 public class TeamServiceImpl implements TeamService {
 
@@ -38,13 +43,25 @@ public class TeamServiceImpl implements TeamService {
     @Override
     @Transactional
     public Team createTeam(Team team) {
+        // Ensure admin and members reference managed User entities to avoid accidental inserts
+        if (team.getAdmin() != null && team.getAdmin().getId() != null) {
+            User managedAdmin = userRepository.findById(team.getAdmin().getId()).orElseThrow(() -> new RuntimeException("User not found"));
+            team.setAdmin(managedAdmin);
+            team.getMembers().clear();
+            team.getMembers().add(managedAdmin);
+        }
         return teamRepository.save(team);
     }
 
     @Override
     @Transactional
-    public Team addMember(Long teamId, Long userId) {
+    public Team addMember(Long teamId, Long userId, String username) {
         Team team = teamRepository.findById(teamId).orElseThrow(() -> new RuntimeException("Team not found"));
+        User actingUser = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+        // Only team admin can add members
+        if (team.getAdmin() == null || !team.getAdmin().getId().equals(actingUser.getId())) {
+            throw new RuntimeException("Only team admin can add members");
+        }
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         team.getMembers().add(user);
         return teamRepository.save(team);
@@ -59,7 +76,6 @@ public class TeamServiceImpl implements TeamService {
     public User findUserByUsername(String username) {
         return userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
     }
-
 
     @Override
     @Transactional

@@ -14,6 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Implementation of {@link com.taskmanager.api.service.TaskService}.
+ * Contains task-related business logic and enforces permission checks
+ * for operations such as update, assign, unassign and status changes.
+ */
 @Service
 public class TaskServiceImpl implements TaskService {
 

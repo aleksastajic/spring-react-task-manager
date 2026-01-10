@@ -1,6 +1,5 @@
     package com.taskmanager.api.controller;
 
-
 import com.taskmanager.api.dto.TaskCreateDto;
 import com.taskmanager.api.dto.TaskDto;
 import com.taskmanager.api.entity.Task;
@@ -27,6 +26,12 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/tasks")
 @Tag(name = "Tasks", description = "Endpoints for task management.")
 public class TaskController {
+
+    /**
+     * REST endpoints for creating, updating, deleting and listing tasks.
+     * Authorization is enforced at the controller level; detailed permission
+     * checks are implemented in the service layer.
+     */
 
     private final TaskService taskService;
     private final UserRepository userRepository;
@@ -70,7 +75,7 @@ public class TaskController {
      */
     @Operation(summary = "Get task by ID", description = "Retrieve a task by its ID.")
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<TaskDto> getTask(@PathVariable Long id) {
         Task t = taskService.findById(id);
         return ResponseEntity.ok(taskMapper.toDto(t));
@@ -81,7 +86,7 @@ public class TaskController {
      */
     @Operation(summary = "List tasks by team", description = "List all tasks for a given team ID.")
     @GetMapping("/team/{teamId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<TaskDto>> listByTeam(@PathVariable Long teamId) {
         List<Task> tasks = taskService.listTasksByTeam(teamId);
         List<TaskDto> dtos = tasks.stream().map(taskMapper::toDto).collect(Collectors.toList());
@@ -93,8 +98,8 @@ public class TaskController {
      */
     @Operation(summary = "Update task", description = "Update a task by its ID. Only creator, team admin, or assignee can update.")
     @PatchMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<TaskDto> updateTask(@PathVariable Long id, @RequestBody TaskDto dto, @RequestHeader("Authorization") String authHeader) {
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<TaskDto> updateTask(@PathVariable Long id, @Valid @RequestBody TaskDto dto) {
         // Extract username from security context
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
         Task updated = taskService.updateTask(id, dto, username);
@@ -106,7 +111,7 @@ public class TaskController {
      */
     @Operation(summary = "Delete task", description = "Delete a task by its ID. Only creator or team admin can delete.")
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
         taskService.deleteTask(id, username);
@@ -117,7 +122,7 @@ public class TaskController {
      */
     @Operation(summary = "List tasks for user", description = "List all tasks assigned to a specific user.")
     @GetMapping("/user/{userId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<TaskDto>> listByUser(@PathVariable Long userId) {
         List<Task> tasks = taskService.listTasksByUser(userId);
         List<TaskDto> dtos = tasks.stream().map(taskMapper::toDto).collect(Collectors.toList());
@@ -129,7 +134,7 @@ public class TaskController {
      */
     @Operation(summary = "Assign user to task", description = "Assign a user to a task. Only admin or creator can assign.")
     @PostMapping("/{taskId}/assignees/{userId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<TaskDto> assignUserToTask(@PathVariable Long taskId, @PathVariable Long userId) {
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
         Task updated = taskService.assignUserToTask(taskId, userId, username);
@@ -141,7 +146,7 @@ public class TaskController {
      */
     @Operation(summary = "Unassign user from task", description = "Unassign a user from a task. Only admin, creator, or the user themselves can unassign.")
     @DeleteMapping("/{taskId}/assignees/{userId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<TaskDto> unassignUserFromTask(@PathVariable Long taskId, @PathVariable Long userId) {
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
         Task updated = taskService.unassignUserFromTask(taskId, userId, username);
@@ -153,7 +158,7 @@ public class TaskController {
      */
     @Operation(summary = "Change task status", description = "Change the status of a task. Only creator, admin, or assignee can change.")
     @PatchMapping("/{taskId}/status")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<TaskDto> changeTaskStatus(@PathVariable Long taskId, @RequestBody StatusChangeRequest statusChangeRequest) {
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
         Task updated = taskService.changeTaskStatus(taskId, statusChangeRequest.getStatus(), username);

@@ -29,4 +29,9 @@ public class TaskMapper {
         if (t.getTeam() != null) dto.setTeamId(t.getTeam().getId());
         return dto;
     }
+
+    /**
+     * Convert a Task entity to its DTO representation. Handles null checks
+     * and maps nested user entities via `UserMapper`.
+     */
 }

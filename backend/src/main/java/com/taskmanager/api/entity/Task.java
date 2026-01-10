@@ -7,7 +7,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Column;
 import jakarta.persistence.Table;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 
@@ -32,6 +36,11 @@ public class Task {
     private User creator;
 
     @ManyToMany
+    @JoinTable(
+        name = "tasks_assignees",
+        joinColumns = @JoinColumn(name = "task_id"),
+        inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
     private Set<User> assignees = new HashSet<>();
 
     @ManyToOne
@@ -39,8 +48,10 @@ public class Task {
 
     private LocalDateTime dueDate;
 
+    @Enumerated(EnumType.STRING)
     private Priority priority = Priority.MEDIUM;
 
+    @Enumerated(EnumType.STRING)
     private Status status = Status.TO_DO;
 
     private LocalDateTime createdAt;

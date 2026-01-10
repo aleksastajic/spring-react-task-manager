@@ -5,5 +5,5 @@ import com.taskmanager.api.dto.AuthResponse;
 
 public interface AuthService {
     AuthResponse login(AuthRequest authRequest);
-    AuthResponse register(String username, String email, String password);
+    AuthResponse register(String username, String email, String password, String displayName);
 }

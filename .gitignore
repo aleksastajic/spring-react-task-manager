@@ -65,12 +65,16 @@ Thumbs.db
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+# Backend logs
+backend/logs/
+
 # Environment variables
 .env
 .env.local
 
 # Application properties with secrets (create application-local.properties for local dev)
 # application-prod.properties
+backend/src/main/resources/application-local.properties
 
 # Node (for when we add React)
 node_modules/
@@ -90,3 +94,4 @@ yarn-error.log
 frontend/node_modules/
 frontend/dist/
 frontend/build/
+frontend/.vite/

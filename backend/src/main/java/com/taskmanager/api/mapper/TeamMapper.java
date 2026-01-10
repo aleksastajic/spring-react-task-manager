@@ -26,4 +26,8 @@ public class TeamMapper {
         if (t.getAdmin() != null) dto.setAdmin(userMapper.toDto(t.getAdmin()));
         return dto;
     }
+
+    /**
+     * Convert a Team entity to `TeamDto`, mapping members and admin using `UserMapper`.
+     */
 }

@@ -47,7 +47,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponse register(String username, String email, String password) {
+    public AuthResponse register(String username, String email, String password, String displayName) {
         /**
          * Create a new user record and issue a JWT token for the created user.
          *
@@ -56,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
         User user = new User();
         user.setUsername(username);
         user.setEmail(email);
-        user.setDisplayName(username);
+        user.setDisplayName(displayName != null && !displayName.isBlank() ? displayName : username);
         User created = userService.createUser(user, password);
         String token = jwtUtils.generateToken(created.getUsername());
         return new AuthResponse(token);

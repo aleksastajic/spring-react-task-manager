@@ -3,13 +3,13 @@ package com.taskmanager.api.controller;
 import com.taskmanager.api.dto.UserDto;
 import com.taskmanager.api.entity.Role;
 import com.taskmanager.api.entity.User;
-import com.taskmanager.api.repository.UserRepository;
 /**
  * REST controller for user-related endpoints.
  * Provides profile endpoints for the currently authenticated user.
  */
 
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.access.prepost.PreAuthorize;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,10 +30,15 @@ import java.util.stream.Collectors;
 @Tag(name = "Users", description = "Endpoints for user profile and information.")
 public class UserController {
 
-    private final UserRepository userRepository;
+    private final com.taskmanager.api.service.UserService userService;
 
-    public UserController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    /**
+     * Controller exposing profile endpoints for the authenticated user.
+     * Supports retrieving, updating and deleting the current user's account.
+     */
+
+    public UserController(com.taskmanager.api.service.UserService userService) {
+        this.userService = userService;
     }
 
     @Operation(summary = "Get current user profile", description = "Return the profile of the currently authenticated user.")
@@ -46,7 +50,7 @@ public class UserController {
             return ResponseEntity.status(401).build();
         }
         String username = auth.getName();
-        User user = userRepository.findByUsername(username).orElse(null);
+        User user = userService.findByUsername(username).orElse(null);
         if (user == null) return ResponseEntity.notFound().build();
         UserDto dto = new UserDto();
         dto.setId(user.getId());
@@ -68,9 +72,9 @@ public class UserController {
             return ResponseEntity.status(401).build();
         }
         String username = auth.getName();
-        User user = userRepository.findByUsername(username).orElse(null);
+        User user = userService.findByUsername(username).orElse(null);
         if (user == null) return ResponseEntity.notFound().build();
-        userRepository.delete(user);
+        userService.deleteUser(user.getId());
         return ResponseEntity.noContent().build();
     }
 
@@ -79,32 +83,22 @@ public class UserController {
      */
     @Operation(summary = "Update current user", description = "Update the currently authenticated user's profile (username, displayName, password). Any field can be omitted.")
     @PatchMapping("/me")
-    public ResponseEntity<UserDto> updateCurrentUser(@RequestBody UserDto updateDto) {
+    public ResponseEntity<UserDto> updateCurrentUser(@Valid @RequestBody com.taskmanager.api.dto.UserUpdateDto updateDto) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
             return ResponseEntity.status(401).build();
         }
         String username = auth.getName();
-        User user = userRepository.findByUsername(username).orElse(null);
+        User user = userService.findByUsername(username).orElse(null);
         if (user == null) return ResponseEntity.notFound().build();
-        if (updateDto.getUsername() != null && !updateDto.getUsername().isBlank()) {
-            user.setUsername(updateDto.getUsername());
-        }
-        if (updateDto.getDisplayName() != null) {
-            user.setDisplayName(updateDto.getDisplayName());
-        }
-        // Password update: only if provided and not blank
-        if (updateDto.getPassword() != null && !updateDto.getPassword().isBlank()) {
-            user.setPassword(updateDto.getPassword()); // In production, hash the password!
-        }
-        userRepository.save(user);
+        User updated = userService.updateUser(user.getId(), updateDto);
         UserDto dto = new UserDto();
-        dto.setId(user.getId());
-        dto.setUsername(user.getUsername());
-        dto.setEmail(user.getEmail());
-        dto.setDisplayName(user.getDisplayName());
-        dto.setCreatedAt(user.getCreatedAt());
-        dto.setRoles(user.getRoles().stream().map(Role::getName).collect(Collectors.toSet()));
+        dto.setId(updated.getId());
+        dto.setUsername(updated.getUsername());
+        dto.setEmail(updated.getEmail());
+        dto.setDisplayName(updated.getDisplayName());
+        dto.setCreatedAt(updated.getCreatedAt());
+        dto.setRoles(updated.getRoles().stream().map(Role::getName).collect(Collectors.toSet()));
         return ResponseEntity.ok(dto);
     }
 }

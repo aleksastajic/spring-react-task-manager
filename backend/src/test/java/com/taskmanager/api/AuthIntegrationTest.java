@@ -67,6 +67,7 @@ class AuthIntegrationTest {
         mockMvc.perform(get("/api/users/me")
                 .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("intuser"));
+                .andExpect(jsonPath("$.username").value("intuser"))
+                .andExpect(jsonPath("$.displayName").value("Integration User"));
     }
 }

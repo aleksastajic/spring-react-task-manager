@@ -20,4 +20,8 @@ public class UserMapper {
         if (u.getRoles() != null) dto.setRoles(u.getRoles().stream().map(r -> r.getName()).collect(Collectors.toSet()));
         return dto;
     }
+
+    /**
+     * Convert a User entity to `UserDto`. Safely handles null entities.
+     */
 }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import './auth.css';
+import { apiRegister } from '../api';
+import Button from '../components/Button'
 
 export default function RegisterPage({ onRegister, onSwitchToLogin }) {
   const [form, setForm] = useState({
@@ -20,12 +21,7 @@ export default function RegisterPage({ onRegister, onSwitchToLogin }) {
     setError('');
     setSuccess(false);
     try {
-      const res = await fetch('http://localhost:8080/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
-      if (!res.ok) throw new Error('Registration failed');
+      await apiRegister(form);
       setSuccess(true);
       if (onRegister) onRegister();
     } catch {
@@ -34,11 +30,11 @@ export default function RegisterPage({ onRegister, onSwitchToLogin }) {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-title">Create Account</div>
-      <form className="auth-form" onSubmit={handleSubmit}>
+    <div className="w-full max-w-md auth-card p-8">
+      <h2 className="text-2xl font-semibold mb-4 text-text">Create Account</h2>
+      <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
         <input
-          className="auth-input"
+          className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent text-text"
           name="username"
           placeholder="Username"
           value={form.username}
@@ -46,7 +42,7 @@ export default function RegisterPage({ onRegister, onSwitchToLogin }) {
           required
         />
         <input
-          className="auth-input"
+          className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent text-text"
           name="email"
           type="email"
           placeholder="Email"
@@ -55,7 +51,7 @@ export default function RegisterPage({ onRegister, onSwitchToLogin }) {
           required
         />
         <input
-          className="auth-input"
+          className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent text-text"
           name="password"
           type="password"
           placeholder="Password"
@@ -64,19 +60,19 @@ export default function RegisterPage({ onRegister, onSwitchToLogin }) {
           required
         />
         <input
-          className="auth-input"
+          className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent text-text"
           name="displayName"
           placeholder="Display Name"
           value={form.displayName}
           onChange={handleChange}
           required
         />
-        <button className="auth-btn" type="submit">Register</button>
+        <Button variant="primary" type="submit">Register</Button>
       </form>
-      {error && <div className="auth-error">{error}</div>}
-      {success && <div className="auth-success">Registration successful! You can now log in.</div>}
-      <div className="auth-link" onClick={onSwitchToLogin}>
-        Already have an account? Login
+      {error && <div className="text-sm text-red-600 mt-3">{error}</div>}
+      {success && <div className="text-sm text-green-600 mt-3">Registration successful! You can now log in.</div>}
+      <div className="text-sm text-gray-600 mt-4">
+        Already have an account? <a className="text-accent" href="#" onClick={onSwitchToLogin}>Login</a>
       </div>
     </div>
   );
