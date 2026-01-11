@@ -33,6 +33,55 @@ Full‑stack task manager with JWT authentication, teams, and tasks.
 - Node.js 18+ (or 20+)
 - PostgreSQL (recommended: 16+)
 
+### Docker Compose (Recommended)
+
+Starts Postgres + backend (Spring Boot) + frontend (Vite).
+
+```bash
+cp .env.example .env
+docker compose up
+```
+
+To rebuild after code changes:
+
+```bash
+docker compose down
+docker compose up --build
+```
+
+Common Docker lifecycle commands:
+
+```bash
+# Stop containers (keeps DB volume/data)
+docker compose stop
+
+# Start containers again
+docker compose start
+
+# Stop + remove containers (keeps volumes by default)
+docker compose down
+
+# Full reset (removes DB volume/data; dev seeder will repopulate)
+docker compose down -v
+```
+
+Auto-start on reboot:
+- By default, Docker Compose does not set a restart policy.
+- If you want containers to automatically start when the Docker daemon starts, add `restart: unless-stopped` to each service in `docker-compose.yml`.
+- On Linux, you also need Docker enabled at boot (e.g. `systemctl enable --now docker`).
+
+If you already have PostgreSQL running locally and see `address already in use` for port `5432`, set `POSTGRES_PORT=5433` in `.env` (or stop the local Postgres service).
+
+URLs:
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:8080`
+
+Notes:
+- The backend uses Flyway migrations automatically.
+- The `dev` profile seeds demo data on an empty DB.
+- CORS allowlist is configurable via `CORS_ALLOWED_ORIGINS`.
+- When running the frontend in Docker, Vite proxies `/api` to the backend using `VITE_PROXY_TARGET` (set in `docker-compose.yml`).
+
 ### Backend
 
 1. Create a database (default is `taskmanager_db`).
@@ -43,8 +92,9 @@ Environment variables supported by the backend:
 - `DB_URL` (default: `jdbc:postgresql://localhost:5432/taskmanager_db`)
 - `DB_USERNAME` (default: `postgres`)
 - `DB_PASSWORD` (default: `postgres`)
-- `JWT_SECRET` (default: a dev-only value)
+- `JWT_SECRET` (default: a dev-only value; can be a plain string or Base64/Base64URL)
 - `JWT_EXPIRATION` (default: `86400000` ms)
+- `CORS_ALLOWED_ORIGINS` (default: `*`)
 
 3. Run the API (dev profile enables seeded demo data):
 
@@ -73,7 +123,9 @@ npm run dev
 
 App URL: `http://localhost:5173`
 
-The Vite dev server proxies ` /api ` to `http://localhost:8080`.
+The Vite dev server proxies `/api` to `http://localhost:8080`.
+
+If you host the backend elsewhere, set `VITE_API_BASE` (e.g. `https://your-api.example.com/api`).
 
 ## Database Migrations (Flyway)
 
@@ -91,6 +143,8 @@ Seeded demo credentials:
 
 - `alice` / `password` (ROLE_USER)
 - `bob` / `password` (ROLE_ADMIN + ROLE_USER)
+- `charlie` / `password` (ROLE_USER)
+- `dana` / `password` (ROLE_USER)
 
 ## Scripts
 
@@ -102,6 +156,17 @@ cd backend
 ./scripts/run-tests-log.sh
 ```
 
+Repo health checks (writes a combined log to `logs/`):
+
+```bash
+./scripts/run-checks-log.sh --all
+
+# or run individual checks
+./scripts/run-checks-log.sh --frontend-lint
+./scripts/run-checks-log.sh --backend-test
+./scripts/run-checks-log.sh --compose-config
+```
+
 Frontend scripts:
 
 ```bash
@@ -109,8 +174,47 @@ cd frontend
 npm run dev
 npm run build
 npm run lint
+
+# one-time browser install (CI runners do this automatically)
+npm run e2e:install
+
+# run Playwright smoke tests
+npm run e2e
 ```
+
+## E2E Smoke Tests (Playwright)
+
+The smoke tests validate the main user flows (login, teams, tasks) in a real browser.
+
+Prereqs:
+- App running locally (recommended: `docker compose up` from repo root)
+- Frontend reachable at `http://localhost:5173`
+- Backend reachable at `http://localhost:8080`
+
+Run:
+
+```bash
+cd frontend
+npm run e2e:install
+npm run e2e
+```
+
+Optional env vars:
+- `E2E_USERNAME` / `E2E_PASSWORD` (defaults to the seeded `alice/password`)
+- `PLAYWRIGHT_BASE_URL` (defaults to `http://localhost:5173`)
 
 ## Project Layout
 
 See [STRUCTURE.md](STRUCTURE.md) for a detailed overview of the backend and frontend folders.
+
+## Possible Future Improvements
+
+- Add refresh tokens + token rotation (or switch to HttpOnly cookie auth)
+- Add pagination/filtering/sorting for tasks and teams
+- Add task comments, attachments, and audit history
+- Add notifications (email or in-app) for due/overdue tasks
+- Add real-time updates (WebSockets/SSE) for team/task changes
+- Hardening: rate limiting, stricter CORS defaults, security headers, improved validation
+- Observability: structured logging, metrics, tracing, health dashboards
+- Production Docker images (multi-stage builds) + `docker compose` prod profile
+- CI enhancements: coverage thresholds, dependency scanning, release/versioning

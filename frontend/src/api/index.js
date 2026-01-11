@@ -1,19 +1,9 @@
 // Central API utility for all backend calls
 // Handles JWT, errors, and provides functions for all endpoints
 
+import { clearToken, getToken } from '../auth/token'
+
 const API_BASE = import.meta.env.VITE_API_BASE || '/api';
-
-function getToken() {
-  return localStorage.getItem('jwt');
-}
-
-export function setToken(token) {
-  if (token) localStorage.setItem('jwt', token);
-}
-
-export function clearToken() {
-  localStorage.removeItem('jwt');
-}
 
 function authHeaders() {
   const token = getToken();
@@ -24,6 +14,11 @@ async function handleResponse(res) {
   if (!res.ok) {
     let msg = 'Unknown error';
     try { msg = (await res.json()).message || res.statusText; } catch { /* ignore */ }
+
+    // If the token is invalid/expired, ensure the app logs out consistently
+    if (res.status === 401) {
+      clearToken()
+    }
     throw new Error(msg);
   }
   if (res.status === 204) return null;
@@ -38,7 +33,6 @@ export async function apiLogin({ usernameOrEmail, password }) {
     body: JSON.stringify({ usernameOrEmail, password })
   });
   const body = await handleResponse(res);
-  if (body && body.token) setToken(body.token);
   return body;
 }
 
@@ -49,7 +43,6 @@ export async function apiRegister({ username, email, password, displayName }) {
     body: JSON.stringify({ username, email, password, displayName })
   });
   const body = await handleResponse(res);
-  if (body && body.token) setToken(body.token);
   return body;
 }
 
@@ -74,7 +67,6 @@ export async function apiDeleteProfile() {
     method: 'DELETE',
     headers: { ...authHeaders() }
   });
-  clearToken();
   return handleResponse(res);
 }
 

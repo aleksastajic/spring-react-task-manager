@@ -12,7 +12,6 @@ export default class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, info) {
     // Could log to an external service here
-    // eslint-disable-next-line no-console
     console.error('Uncaught error:', error, info);
   }
 

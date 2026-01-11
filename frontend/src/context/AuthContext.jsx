@@ -1,22 +1,28 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useEffect, useMemo, useState } from 'react';
+import { clearToken, getToken, onTokenChange, setToken as persistToken } from '../auth/token';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('jwt'));
-  const [token, setToken] = useState(localStorage.getItem('jwt'));
+  const [token, setToken] = useState(getToken());
+
+  const isLoggedIn = useMemo(() => !!token, [token]);
 
   const login = (token) => {
-    localStorage.setItem('jwt', token);
-    setIsLoggedIn(true);
+    persistToken(token);
     setToken(token);
   };
 
   const logout = () => {
-    localStorage.removeItem('jwt');
-    setIsLoggedIn(false);
+    clearToken();
     setToken(null);
   };
+
+  useEffect(() => {
+    return onTokenChange((nextToken) => {
+      setToken(nextToken);
+    })
+  }, []);
 
   return (
     <AuthContext.Provider value={{ isLoggedIn, login, logout, token }}>

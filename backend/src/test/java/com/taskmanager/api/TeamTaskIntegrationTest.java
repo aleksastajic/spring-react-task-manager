@@ -14,6 +14,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -42,27 +44,37 @@ class TeamTaskIntegrationTest {
 
     @Test
     void createTeamAndTaskFlow() throws Exception {
-        // Register and login
-        String regJson = objectMapper.writeValueAsString(Map.of(
+        // Register users
+        String regJson1 = objectMapper.writeValueAsString(Map.of(
                 "username", "teamuser",
                 "email", "teamuser@example.com",
                 "password", "teampass",
                 "displayName", "Team User"
         ));
         mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(regJson))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(regJson1))
                 .andExpect(status().isOk());
-        String loginJson = objectMapper.writeValueAsString(Map.of(
-                "usernameOrEmail", "teamuser",
-                "password", "teampass"
+
+        String regJson2 = objectMapper.writeValueAsString(Map.of(
+                "username", "memberuser",
+                "email", "memberuser@example.com",
+                "password", "memberpass",
+                "displayName", "Member User"
         ));
-        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(loginJson))
-                .andExpect(status().isOk())
-                .andReturn();
-        String token = objectMapper.readTree(loginResult.getResponse().getContentAsString()).get("token").asText();
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(regJson2))
+                .andExpect(status().isOk());
+
+        // Login both users
+        String tokenTeamAdmin = loginAndGetToken("teamuser", "teampass");
+        String tokenNonAdmin = loginAndGetToken("memberuser", "memberpass");
+
+        Long teamUserId = getUserIdByUsername("teamuser");
+        Long memberUserId = getUserIdByUsername("memberuser");
+        assertThat(teamUserId).isNotNull();
+        assertThat(memberUserId).isNotNull();
 
         // Create team
         String teamJson = objectMapper.writeValueAsString(Map.of(
@@ -70,7 +82,7 @@ class TeamTaskIntegrationTest {
                 "description", "A test team"
         ));
         MvcResult teamResult = mockMvc.perform(post("/api/teams")
-                .header("Authorization", "Bearer " + token)
+                .header("Authorization", "Bearer " + tokenTeamAdmin)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(teamJson))
                 .andReturn();
@@ -84,19 +96,24 @@ class TeamTaskIntegrationTest {
                 org.assertj.core.api.Assertions.assertThat(objectMapper.readTree(teamResult.getResponse().getContentAsString()).get("name").asText()).isEqualTo("Test Team");
                 Long teamId = objectMapper.readTree(teamResult.getResponse().getContentAsString()).get("id").asLong();
 
-        // Add user as team member (simulate admin action)
-        // In a real app, this would require admin privileges, but for test we assume userId=1
-        mockMvc.perform(post("/api/teams/" + teamId + "/members/1")
-                    .header("Authorization", "Bearer " + token))
-                    .andExpect(status().isForbidden());
+        // Non-admin user cannot add members
+                mockMvc.perform(post("/api/teams/" + teamId + "/members/" + memberUserId)
+                        .header("Authorization", "Bearer " + tokenNonAdmin))
+                .andExpect(status().isForbidden());
+
+        // Team admin can add a valid member
+        mockMvc.perform(post("/api/teams/" + teamId + "/members/" + memberUserId)
+                        .header("Authorization", "Bearer " + tokenTeamAdmin))
+                .andExpect(status().isOk());
+
         String taskJson = objectMapper.writeValueAsString(Map.of(
                 "title", "Test Task",
                 "description", "A test task",
                 "teamId", teamId,
-                "assigneeIds", List.of(1)
+                "assigneeIds", List.of(memberUserId)
         ));
         MvcResult taskResult = mockMvc.perform(post("/api/tasks")
-                .header("Authorization", "Bearer " + token)
+                .header("Authorization", "Bearer " + tokenTeamAdmin)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(taskJson))
                 .andExpect(status().isOk())
@@ -106,9 +123,30 @@ class TeamTaskIntegrationTest {
 
         // List tasks by team
         mockMvc.perform(get("/api/tasks/team/" + teamId)
-                .header("Authorization", "Bearer " + token))
+                .header("Authorization", "Bearer " + tokenTeamAdmin))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(taskId));
+    }
+
+    private String loginAndGetToken(String usernameOrEmail, String password) throws Exception {
+        String loginJson = objectMapper.writeValueAsString(Map.of(
+                "usernameOrEmail", usernameOrEmail,
+                "password", password
+        ));
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginJson))
+                .andExpect(status().isOk())
+                .andReturn();
+        return objectMapper.readTree(loginResult.getResponse().getContentAsString()).get("token").asText();
+    }
+
+    private Long getUserIdByUsername(String username) {
+        return jdbcTemplate.queryForObject(
+                "SELECT id FROM users WHERE username = ?",
+                Long.class,
+                username
+        );
     }
 
     @Test
@@ -124,6 +162,10 @@ class TeamTaskIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(regJson))
                 .andExpect(status().isOk());
+
+        Long errUserId = getUserIdByUsername("erruser");
+        assertThat(errUserId).isNotNull();
+
         String loginJson = objectMapper.writeValueAsString(Map.of(
                 "usernameOrEmail", "erruser",
                 "password", "errpass"
@@ -140,7 +182,7 @@ class TeamTaskIntegrationTest {
                 "title", "Bad Task",
                 "description", "Should fail",
                 "teamId", 99999,
-                "assigneeIds", List.of(2)
+                "assigneeIds", List.of(errUserId)
         ));
         mockMvc.perform(post("/api/tasks")
                 .header("Authorization", "Bearer " + token)

@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage';
 import TeamsPage from './pages/TeamsPage';
 import TasksPage from './pages/TasksPage';
 import ProfilePage from './pages/ProfilePage';
+import { apiGetProfile } from './api';
 import { useAuth } from './hooks/useAuth';
 import ProfileIcon from './components/ProfileIcon';
 import HamburgerIcon from './components/HamburgerIcon';
@@ -43,14 +44,34 @@ function App() {
   const hideHeader = location && (location.pathname === '/login' || location.pathname === '/register');
   const [showDropdown, setShowDropdown] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
     setDrawerOpen(false);
+    setShowDropdown(false);
+    setCurrentUser(null);
     navigate('/login');
   };
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadMe() {
+      try {
+        const me = await apiGetProfile();
+        if (mounted) setCurrentUser(me);
+      } catch {
+        // If token is invalid, api layer will clear it and RequireAuth will redirect
+        if (mounted) setCurrentUser(null);
+      }
+    }
+    if (isLoggedIn) loadMe();
+    return () => { mounted = false; };
+  }, [isLoggedIn]);
+
+  const currentUserLabel = currentUser?.displayName || currentUser?.username || '';
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -106,13 +127,16 @@ function App() {
         <div className="header-profile absolute right-4 top-1/2 transform -translate-y-1/2">
           {isLoggedIn ? (
             <div className="profile-dropdown" ref={dropdownRef}>
-              <button className="profile-btn text-white" onClick={() => setShowDropdown(v => !v)}>
+              <button className="profile-btn text-white flex items-center gap-2" onClick={() => setShowDropdown(v => !v)}>
                 <ProfileIcon />
+                {currentUserLabel ? (
+                  <span className="hidden sm:inline text-sm font-medium max-w-[10rem] truncate">{currentUserLabel}</span>
+                ) : null}
               </button>
               {showDropdown && (
                 <div className="dropdown-menu">
                   <NavLink to="/profile" className="dropdown-item">Profile</NavLink>
-                  <button className="dropdown-item" onClick={logout}>Logout</button>
+                  <button className="dropdown-item" onClick={handleLogout}>Logout</button>
                 </div>
               )}
             </div>

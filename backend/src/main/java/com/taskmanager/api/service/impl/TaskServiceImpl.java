@@ -9,6 +9,7 @@ import com.taskmanager.api.repository.TaskRepository;
 import com.taskmanager.api.repository.TeamRepository;
 import com.taskmanager.api.repository.UserRepository;
 import com.taskmanager.api.service.TaskService;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,6 +63,12 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     public Task createTask(Task task) {
+        if (task.getTeam() != null && task.getTeam().getId() != null) {
+            Long teamId = task.getTeam().getId();
+            Team team = teamRepository.findById(teamId)
+                    .orElseThrow(() -> new DataIntegrityViolationException("Team does not exist: " + teamId));
+            task.setTeam(team);
+        }
         return taskRepository.save(task);
     }
 
