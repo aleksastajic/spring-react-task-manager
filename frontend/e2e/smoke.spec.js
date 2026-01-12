@@ -51,11 +51,23 @@ test('smoke: create team -> view tasks -> create task -> change status', async (
   const taskTitle = `E2E Task ${Date.now()}`
   await page.getByLabel('Title').fill(taskTitle)
   await page.getByLabel('Description').fill('Created by Playwright')
+
+  const createTaskResponsePromise = page.waitForResponse((res) => {
+    return (
+      res.url().includes('/api/tasks') &&
+      res.request().method() === 'POST' &&
+      res.status() >= 200 &&
+      res.status() < 300
+    )
+  })
   await page.getByRole('button', { name: /^create$/i }).click()
+  const createTaskResponse = await createTaskResponsePromise
+  expect(createTaskResponse.ok()).toBeTruthy()
 
   // Verify task appears
   const taskCard = page.locator('.card-surface', { hasText: taskTitle }).first()
-  await expect(taskCard).toBeVisible()
+  console.log('Checking for taskCard with title:', taskTitle)
+  await expect(taskCard).toBeVisible({ timeout: 20000 })
 
   // Verify assignee visible (creator assigned by UI)
   await expect(taskCard.getByText(/assignees/i)).toBeVisible()

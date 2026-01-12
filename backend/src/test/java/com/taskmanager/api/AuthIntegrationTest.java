@@ -11,6 +11,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -29,12 +32,21 @@ class AuthIntegrationTest extends PostgresTestcontainerBase {
 
     @BeforeEach
     void cleanDb() {
-        jdbcTemplate.execute("DELETE FROM tasks");
-        jdbcTemplate.execute("DELETE FROM teams_members");
-        jdbcTemplate.execute("DELETE FROM teams");
-        jdbcTemplate.execute("DELETE FROM users_roles");
-        jdbcTemplate.execute("DELETE FROM users");
-        jdbcTemplate.execute("DELETE FROM roles");
+                DataSource ds = jdbcTemplate.getDataSource();
+                if (ds == null) {
+                        throw new IllegalStateException("No DataSource available for integration test cleanup");
+                }
+
+                try (Connection ignored = ds.getConnection()) {
+                        jdbcTemplate.update("DELETE FROM tasks");
+                        jdbcTemplate.update("DELETE FROM teams_members");
+                        jdbcTemplate.update("DELETE FROM teams");
+                        jdbcTemplate.update("DELETE FROM users_roles");
+                        jdbcTemplate.update("DELETE FROM users");
+                        jdbcTemplate.update("DELETE FROM roles");
+                } catch (SQLException e) {
+                        throw new RuntimeException("Could not clean database before tests", e);
+                }
     }
 
     @Test

@@ -80,16 +80,9 @@ jobs:
       - name: Start backend + db (Docker Compose)
         run: |
           docker compose up -d db backend
-          for i in {1..60}; do
-            if curl -fsS http://localhost:8080/v3/api-docs > /dev/null; then
-              echo "Backend is up"
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "Backend did not become ready in time" >&2
-          docker compose logs backend --no-color || true
-          exit 1
+          # Wait until the backend is reachable before running E2E.
+          curl --retry 30 --retry-delay 2 --retry-connrefuse --silent --fail http://localhost:8080/v3/api-docs > /dev/null
+          echo "Backend is up"
 
       - name: Install frontend dependencies
         working-directory: frontend
