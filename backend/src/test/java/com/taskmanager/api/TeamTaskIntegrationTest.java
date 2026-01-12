@@ -11,6 +11,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -32,15 +35,37 @@ class TeamTaskIntegrationTest extends PostgresTestcontainerBase {
 
     @BeforeEach
     void cleanDb() {
-        jdbcTemplate.execute("DELETE FROM tasks");
-        jdbcTemplate.execute("DELETE FROM teams_members");
-        jdbcTemplate.execute("DELETE FROM teams");
-        jdbcTemplate.execute("DELETE FROM users_roles");
-        jdbcTemplate.execute("DELETE FROM users");
-        jdbcTemplate.execute("DELETE FROM roles");
-        // Insert required roles
-        jdbcTemplate.execute("INSERT INTO roles (name) VALUES ('ROLE_USER')");
-        jdbcTemplate.execute("INSERT INTO roles (name) VALUES ('ROLE_ADMIN')");
+                DataSource ds = jdbcTemplate.getDataSource();
+                if (ds == null) {
+                        throw new IllegalStateException("No DataSource available for integration test cleanup");
+                }
+
+                int attempts = 0;
+                while (attempts < 5) {
+                        try (Connection ignored = ds.getConnection()) {
+                                jdbcTemplate.update("DELETE FROM tasks");
+                                jdbcTemplate.update("DELETE FROM teams_members");
+                                jdbcTemplate.update("DELETE FROM teams");
+                                jdbcTemplate.update("DELETE FROM users_roles");
+                                jdbcTemplate.update("DELETE FROM users");
+                                jdbcTemplate.update("DELETE FROM roles");
+                                // Insert required roles
+                                jdbcTemplate.update("INSERT INTO roles (name) VALUES ('ROLE_USER')");
+                                jdbcTemplate.update("INSERT INTO roles (name) VALUES ('ROLE_ADMIN')");
+                                return;
+                        } catch (SQLException e) {
+                                attempts++;
+                                if (attempts >= 5) {
+                                        throw new RuntimeException("Could not clean database before tests", e);
+                                }
+                                try {
+                                        Thread.sleep(2000);
+                                } catch (InterruptedException ie) {
+                                        Thread.currentThread().interrupt();
+                                        throw new RuntimeException("Interrupted while waiting to retry DB cleanup", ie);
+                                }
+                        }
+                }
     }
 
     @Test

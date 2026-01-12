@@ -17,7 +17,9 @@ abstract class PostgresTestcontainerBase {
             .withDatabaseName("taskmanager_test")
             .withUsername("postgres")
             .withPassword("postgres")
-            .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(60)));
+            // Wait for Postgres to be ready to accept connections (not just port-open).
+            .waitingFor(Wait.forLogMessage(".*database system is ready to accept connections.*\\n", 1)
+                .withStartupTimeout(Duration.ofSeconds(90)));
 
     @DynamicPropertySource
     static void overrideSpringProperties(DynamicPropertyRegistry registry) {
@@ -30,6 +32,10 @@ abstract class PostgresTestcontainerBase {
         registry.add("spring.datasource.hikari.connectionTimeout", () -> "30000");
         registry.add("spring.datasource.hikari.validationTimeout", () -> "5000");
         registry.add("spring.datasource.hikari.maximumPoolSize", () -> "5");
+        registry.add("spring.datasource.hikari.minimumIdle", () -> "0");
+        registry.add("spring.datasource.hikari.idleTimeout", () -> "10000");
+        registry.add("spring.datasource.hikari.maxLifetime", () -> "30000");
+        registry.add("spring.datasource.hikari.keepaliveTime", () -> "15000");
 
         // Ensure Flyway runs against the same container DB.
         registry.add("spring.flyway.url", POSTGRES::getJdbcUrl);
