@@ -70,7 +70,9 @@ Auto-start on reboot:
 - If you want containers to automatically start when the Docker daemon starts, add `restart: unless-stopped` to each service in `docker-compose.yml`.
 - On Linux, you also need Docker enabled at boot (e.g. `systemctl enable --now docker`).
 
-If you already have PostgreSQL running locally and see `address already in use` for port `5432`, set `POSTGRES_PORT=5433` in `.env` (or stop the local Postgres service).
+Database port note:
+- This repo’s Compose defaults the Postgres host port to `5433` to avoid conflicts with a locally-installed Postgres.
+- You can override with `POSTGRES_PORT=5432` in `.env` if `5432` is free.
 
 URLs:
 - Frontend: `http://localhost:5173`
@@ -78,7 +80,7 @@ URLs:
 
 Notes:
 - The backend uses Flyway migrations automatically.
-- The `dev` profile seeds demo data on an empty DB.
+- The `dev` profile seeds demo data and keeps demo credentials present even if you’re using a persistent DB volume.
 - CORS allowlist is configurable via `CORS_ALLOWED_ORIGINS`.
 - When running the frontend in Docker, Vite proxies `/api` to the backend using `VITE_PROXY_TARGET` (set in `docker-compose.yml`).
 
@@ -135,7 +137,7 @@ If you host the backend elsewhere, set `VITE_API_BASE` (e.g. `https://your-api.e
 
 ## Development Seed Data
 
-When running with the `dev` profile, a dev-only seeder inserts demo data on an empty database:
+When running with the `dev` profile, a dev-only seeder upserts demo users/teams/tasks so onboarding and E2E have stable credentials (even when using a persistent DB volume):
 
 - `backend/src/main/java/com/taskmanager/api/config/DevDataSeeder.java`
 
@@ -148,7 +150,7 @@ Seeded demo credentials:
 
 ## Scripts
 
-Backend helper scripts (write logs to `backend/logs/`):
+Backend helper scripts (write logs to `logs/`):
 
 ```bash
 cd backend
@@ -165,6 +167,12 @@ Repo health checks (writes a combined log to `logs/`):
 ./scripts/run-checks-log.sh --frontend-lint
 ./scripts/run-checks-log.sh --backend-test
 ./scripts/run-checks-log.sh --compose-config
+```
+
+E2E helper script (writes logs to `logs/`):
+
+```bash
+./scripts/run-e2e-log.sh
 ```
 
 Frontend scripts:
@@ -202,6 +210,13 @@ npm run e2e
 Optional env vars:
 - `E2E_USERNAME` / `E2E_PASSWORD` (defaults to the seeded `alice/password`)
 - `PLAYWRIGHT_BASE_URL` (defaults to `http://localhost:5173`)
+
+## Backend Integration Tests (Testcontainers)
+
+Some backend integration tests use Testcontainers PostgreSQL so CI can run against a clean, real database.
+
+- Requires Docker to be available on the machine running tests.
+- Locally, tests are configured to skip when Docker isn’t available.
 
 ## Project Layout
 

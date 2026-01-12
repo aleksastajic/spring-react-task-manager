@@ -18,7 +18,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class AuthIntegrationTest {
+@SuppressWarnings("null")
+class AuthIntegrationTest extends PostgresTestcontainerBase {
     @Autowired
     private MockMvc mockMvc;
     @Autowired

@@ -241,8 +241,9 @@ export default function TasksPage() {
           }}
         >
           <div className="md:col-span-3">
-            <label className="text-sm text-gray-600">Title</label>
+            <label className="text-sm text-gray-600" htmlFor="task-create-title">Title</label>
             <input
+              id="task-create-title"
               placeholder="e.g. Prepare sprint demo"
               value={form.title}
               onChange={e => setForm({ ...form, title: e.target.value })}
@@ -251,8 +252,9 @@ export default function TasksPage() {
             />
           </div>
           <div className="md:col-span-4">
-            <label className="text-sm text-gray-600">Description</label>
+            <label className="text-sm text-gray-600" htmlFor="task-create-description">Description</label>
             <input
+              id="task-create-description"
               placeholder="Optional"
               value={form.description}
               onChange={e => setForm({ ...form, description: e.target.value })}
@@ -260,8 +262,9 @@ export default function TasksPage() {
             />
           </div>
           <div className="md:col-span-3">
-            <label className="text-sm text-gray-600">Team</label>
+            <label className="text-sm text-gray-600" htmlFor="task-create-team">Team</label>
             <select
+              id="task-create-team"
               value={form.teamId}
               onChange={e => setForm({ ...form, teamId: e.target.value })}
               className="mt-1 w-full border rounded px-3 py-2"
@@ -271,8 +274,9 @@ export default function TasksPage() {
             </select>
           </div>
           <div className="md:col-span-1">
-            <label className="text-sm text-gray-600">Priority</label>
+            <label className="text-sm text-gray-600" htmlFor="task-create-priority">Priority</label>
             <select
+              id="task-create-priority"
               value={form.priority}
               onChange={e => setForm({ ...form, priority: e.target.value })}
               className="mt-1 w-full border rounded px-3 py-2"

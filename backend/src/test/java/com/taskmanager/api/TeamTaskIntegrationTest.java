@@ -21,7 +21,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class TeamTaskIntegrationTest {
+@SuppressWarnings("null")
+class TeamTaskIntegrationTest extends PostgresTestcontainerBase {
     @Autowired
     private MockMvc mockMvc;
     @Autowired

@@ -98,7 +98,7 @@ if [[ $DO_COMPOSE -eq 1 ]]; then
 fi
 
 if [[ $DO_BE_TEST -eq 1 ]]; then
-  run "backend tests" bash -lc 'cd backend && ./mvnw -q test' || overall=1
+  run "backend tests" bash -lc 'cd backend && ./mvnw -B test' || overall=1
 fi
 
 if [[ $DO_FE_LINT -eq 1 ]]; then

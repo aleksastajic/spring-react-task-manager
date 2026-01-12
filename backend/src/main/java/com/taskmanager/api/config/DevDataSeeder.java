@@ -14,14 +14,16 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import java.time.LocalDate;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Configuration
 @Profile("dev")
+@SuppressWarnings("null")
 public class DevDataSeeder implements CommandLineRunner {
 
     private final RoleRepository roleRepo;
@@ -38,73 +40,47 @@ public class DevDataSeeder implements CommandLineRunner {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @Override
-    public void run(String... args) throws Exception {
-        if (userRepo.count() > 0) return; // avoid reseeding
+    private User upsertUser(String username, String email, String displayName, Set<Role> roles) {
+        @SuppressWarnings("null")
+        Optional<User> existing = userRepo.findByUsername(username);
+        User u = existing.orElseGet(User::new);
+        u.setUsername(username);
+        u.setEmail(email);
+        u.setDisplayName(displayName);
+        u.setRoles(new HashSet<>(roles));
 
+        // In dev we keep demo credentials stable for onboarding + E2E.
+        u.setPassword(passwordEncoder.encode("password"));
+        return userRepo.save(u);
+    }
+
+    private Team upsertTeam(String name, String description, User admin, Set<User> members) {
+        Team t = teamRepo.findByName(name).orElseGet(Team::new);
+        t.setName(name);
+        t.setDescription(description);
+        t.setAdmin(admin);
+
+        // Ensure members are present even if the team already existed.
+        t.getMembers().clear();
+        t.getMembers().addAll(members);
+        return teamRepo.save(t);
+    }
+
+    @Override
+    @Transactional
+    public void run(String... args) throws Exception {
         Role userRole = roleRepo.findByName("ROLE_USER").orElseGet(() -> roleRepo.save(new Role("ROLE_USER")));
         Role adminRole = roleRepo.findByName("ROLE_ADMIN").orElseGet(() -> roleRepo.save(new Role("ROLE_ADMIN")));
 
-        User alice = new User();
-        alice.setUsername("alice");
-        alice.setEmail("alice@example.com");
-        alice.setDisplayName("Alice A.");
-        alice.setPassword(passwordEncoder.encode("password"));
-        alice.setRoles(new HashSet<>(Set.of(userRole)));
-        alice = userRepo.save(alice);
+        // Demo credentials used by README + Playwright smoke
+        User alice = upsertUser("alice", "alice@example.com", "Alice A.", Set.of(userRole));
+        User bob = upsertUser("bob", "bob@example.com", "Bob B.", Set.of(userRole, adminRole));
+        User charlie = upsertUser("charlie", "charlie@example.com", "Charlie C.", Set.of(userRole));
+        User dana = upsertUser("dana", "dana@example.com", "Dana D.", Set.of(userRole));
 
-        User bob = new User();
-        bob.setUsername("bob");
-        bob.setEmail("bob@example.com");
-        bob.setDisplayName("Bob B.");
-        bob.setPassword(passwordEncoder.encode("password"));
-        Set<Role> bobRoles = new HashSet<>();
-        bobRoles.add(userRole);
-        bobRoles.add(adminRole);
-        bob.setRoles(bobRoles);
-        bob = userRepo.save(bob);
-
-        User charlie = new User();
-        charlie.setUsername("charlie");
-        charlie.setEmail("charlie@example.com");
-        charlie.setDisplayName("Charlie C.");
-        charlie.setPassword(passwordEncoder.encode("password"));
-        charlie.setRoles(new HashSet<>(Set.of(userRole)));
-        charlie = userRepo.save(charlie);
-
-        User dana = new User();
-        dana.setUsername("dana");
-        dana.setEmail("dana@example.com");
-        dana.setDisplayName("Dana D.");
-        dana.setPassword(passwordEncoder.encode("password"));
-        dana.setRoles(new HashSet<>(Set.of(userRole)));
-        dana = userRepo.save(dana);
-
-        Team alpha = new Team();
-        alpha.setName("Alpha Team");
-        alpha.setDescription("Product team focused on core features.");
-        alpha.setAdmin(bob);
-        alpha.getMembers().add(alice);
-        alpha.getMembers().add(bob);
-        alpha.getMembers().add(charlie);
-        alpha = teamRepo.save(alpha);
-
-        Team beta = new Team();
-        beta.setName("Beta Team");
-        beta.setDescription("Internal tooling & QA improvements.");
-        beta.setAdmin(alice);
-        beta.getMembers().add(alice);
-        beta.getMembers().add(bob);
-        beta.getMembers().add(dana);
-        beta = teamRepo.save(beta);
-
-        Team gamma = new Team();
-        gamma.setName("Gamma Team");
-        gamma.setDescription("Customer success workflows and support ops.");
-        gamma.setAdmin(bob);
-        gamma.getMembers().add(bob);
-        gamma.getMembers().add(charlie);
-        gamma = teamRepo.save(gamma);
+        Team alpha = upsertTeam("Alpha Team", "Product team focused on core features.", bob, Set.of(alice, bob, charlie));
+        Team beta = upsertTeam("Beta Team", "Internal tooling & QA improvements.", alice, Set.of(alice, bob, dana));
+        Team gamma = upsertTeam("Gamma Team", "Customer success workflows and support ops.", bob, Set.of(bob, charlie));
 
         // A richer task set so the dashboard has meaningful stats
         LocalDateTime now = LocalDateTime.now();

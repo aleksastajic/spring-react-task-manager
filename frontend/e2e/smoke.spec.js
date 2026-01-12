@@ -7,11 +7,20 @@ async function login(page) {
   await page.goto('/login')
   await page.getByPlaceholder('Username or Email').fill(USERNAME)
   await page.getByPlaceholder('Password').fill(PASSWORD)
+  const loginResponsePromise = page.waitForResponse((res) => {
+    return res.url().includes('/api/auth/login') && res.request().method() === 'POST'
+  })
+
   await page.getByRole('button', { name: 'Login' }).click()
+  const loginRes = await loginResponsePromise
+  expect(loginRes.ok(), `Login failed: ${loginRes.status()} ${loginRes.statusText()}`).toBeTruthy()
+
+  // Ensure we didn't stay on the login page due to a UI-level error.
+  await expect(page.getByText('Invalid credentials')).toHaveCount(0)
 
   // Dashboard route is '/'
   await expect(page).toHaveURL(/\/($|\?)/)
-  await expect(page.getByText('Dashboard', { exact: false })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
 }
 
 test('smoke: login loads dashboard', async ({ page }) => {
@@ -50,9 +59,11 @@ test('smoke: create team -> view tasks -> create task -> change status', async (
 
   // Verify assignee visible (creator assigned by UI)
   await expect(taskCard.getByText(/assignees/i)).toBeVisible()
-  await expect(taskCard.getByText(/alice|alice a\./i)).toBeVisible()
+  // Avoid strict-mode ambiguity: the assignee name also appears in the "Assign someone" dropdown.
+  await expect(taskCard.getByRole('button', { name: /unassign/i })).toBeVisible()
 
   // Change status to DONE
-  await taskCard.getByRole('combobox').first().selectOption('DONE')
-  await expect(taskCard.getByText('DONE', { exact: true })).toBeVisible()
+  const statusSelect = taskCard.getByRole('combobox').first()
+  await statusSelect.selectOption('DONE')
+  await expect(statusSelect).toHaveValue('DONE')
 })

@@ -50,8 +50,8 @@ This document describes the high-level layout of the repository.
 
 **Utility scripts (`backend/scripts/`)**
 
-- `run-build-log.sh` — Build/package with timestamped logs in `backend/logs/`
-- `run-tests-log.sh` — Run tests with timestamped logs in `backend/logs/`
+- `run-build-log.sh` — Build/package with timestamped logs in `logs/`
+- `run-tests-log.sh` — Run tests with timestamped logs in `logs/`
 
 ## Frontend (React + Vite)
 
@@ -86,3 +86,4 @@ This document describes the high-level layout of the repository.
 **Repo-level scripts (`scripts/`)**
 
 - `run-checks-log.sh` — Runs common health checks and writes a combined log to `logs/`
+- `run-e2e-log.sh` — Runs Playwright smoke tests and writes logs to `logs/`

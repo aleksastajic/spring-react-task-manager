@@ -18,5 +18,7 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },
-  reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : [['list'], ['html']],
+  reporter: process.env.CI
+    ? [['github'], ['html', { open: 'never' }]]
+    : [['list'], ['html', { open: 'never' }]],
 })

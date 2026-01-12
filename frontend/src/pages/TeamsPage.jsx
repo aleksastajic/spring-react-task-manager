@@ -117,12 +117,12 @@ export default function TeamsPage() {
               } catch (err) { setCreateError(err.message || 'Failed to create team'); }
             }}>
               <div className="md:col-span-1">
-                <label className="text-sm">Name</label>
-                <input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent text-text" />
+                <label className="text-sm" htmlFor="team-create-name">Name</label>
+                <input id="team-create-name" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent text-text" />
               </div>
               <div className="md:col-span-1">
-                <label className="text-sm">Description</label>
-                <input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent text-text" />
+                <label className="text-sm" htmlFor="team-create-description">Description</label>
+                <input id="team-create-description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent text-text" />
               </div>
               <div className="md:col-span-1 flex gap-2">
                 <Button variant="primary" type="submit">Create</Button>
