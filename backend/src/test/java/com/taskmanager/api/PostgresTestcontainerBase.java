@@ -7,6 +7,9 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.time.Duration;
 
 @Testcontainers(disabledWithoutDocker = true)
@@ -24,13 +27,9 @@ abstract class PostgresTestcontainerBase {
 
     @DynamicPropertySource
     static void overrideSpringProperties(DynamicPropertyRegistry registry) {
-        // Give Postgres extra time to finish internal warmup after container reports ready.
-        // This prevents Hikari from attempting connections before Postgres is truly ready.
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        // Ensure Postgres is truly ready by attempting actual connections and retrying.
+        // This prevents Hikari from getting closed connections during Spring context init.
+        ensurePostgresReady();
         
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
@@ -53,5 +52,30 @@ abstract class PostgresTestcontainerBase {
         registry.add("spring.flyway.url", POSTGRES::getJdbcUrl);
         registry.add("spring.flyway.user", POSTGRES::getUsername);
         registry.add("spring.flyway.password", POSTGRES::getPassword);
+    }
+
+    private static void ensurePostgresReady() {
+        String jdbcUrl = POSTGRES.getJdbcUrl();
+        String username = POSTGRES.getUsername();
+        String password = POSTGRES.getPassword();
+        
+        int maxAttempts = 10;
+        for (int i = 0; i < maxAttempts; i++) {
+            try (Connection conn = DriverManager.getConnection(jdbcUrl, username, password)) {
+                // Successfully connected and closed - Postgres is ready
+                return;
+            } catch (SQLException e) {
+                if (i < maxAttempts - 1) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException("Interrupted while waiting for Postgres", ie);
+                    }
+                } else {
+                    throw new RuntimeException("Postgres not ready after " + maxAttempts + " attempts", e);
+                }
+            }
+        }
     }
 }
