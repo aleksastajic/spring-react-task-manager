@@ -17,14 +17,21 @@ abstract class PostgresTestcontainerBase {
             .withDatabaseName("taskmanager_test")
             .withUsername("postgres")
             .withPassword("postgres")
-            // Wait for the 2nd occurrence of the ready log message. Postgres logs this message
-            // twice: once after recovery and once after full startup. Waiting for the 2nd ensures
-            // the database is fully ready to accept queries, avoiding Hikari validation warnings.
-            .waitingFor(Wait.forLogMessage(".*database system is ready to accept connections.*\\n", 2)
+            // Use healthcheck wait strategy: executes actual query to verify DB is ready.
+            // This is more reliable than log messages for avoiding Hikari validation warnings.
+            .waitingFor(Wait.forHealthcheck()
                 .withStartupTimeout(Duration.ofSeconds(120)));
 
     @DynamicPropertySource
     static void overrideSpringProperties(DynamicPropertyRegistry registry) {
+        // Give Postgres extra time to finish internal warmup after container reports ready.
+        // This prevents Hikari from attempting connections before Postgres is truly ready.
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
