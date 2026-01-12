@@ -17,9 +17,9 @@ abstract class PostgresTestcontainerBase {
             .withDatabaseName("taskmanager_test")
             .withUsername("postgres")
             .withPassword("postgres")
-            // Use healthcheck wait strategy: executes actual query to verify DB is ready.
-            // This is more reliable than log messages for avoiding Hikari validation warnings.
-            .waitingFor(Wait.forHealthcheck()
+            // Wait for 2nd occurrence of ready log. Postgres logs this twice: once during init,
+            // once after final startup. The 2nd occurrence confirms the DB is truly ready.
+            .waitingFor(Wait.forLogMessage(".*database system is ready to accept connections.*\\n", 2)
                 .withStartupTimeout(Duration.ofSeconds(120)));
 
     @DynamicPropertySource
@@ -27,7 +27,7 @@ abstract class PostgresTestcontainerBase {
         // Give Postgres extra time to finish internal warmup after container reports ready.
         // This prevents Hikari from attempting connections before Postgres is truly ready.
         try {
-            Thread.sleep(3000);
+            Thread.sleep(5000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
