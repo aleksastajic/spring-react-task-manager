@@ -17,9 +17,10 @@ abstract class PostgresTestcontainerBase {
             .withDatabaseName("taskmanager_test")
             .withUsername("postgres")
             .withPassword("postgres")
-            // Wait for Postgres to be ready to accept connections (not just port-open).
-            // Increase startup timeout on CI; log message wait is more reliable than port-only checks.
-            .waitingFor(Wait.forLogMessage(".*database system is ready to accept connections.*\\n", 1)
+            // Wait for the 2nd occurrence of the ready log message. Postgres logs this message
+            // twice: once after recovery and once after full startup. Waiting for the 2nd ensures
+            // the database is fully ready to accept queries, avoiding Hikari validation warnings.
+            .waitingFor(Wait.forLogMessage(".*database system is ready to accept connections.*\\n", 2)
                 .withStartupTimeout(Duration.ofSeconds(120)));
 
     @DynamicPropertySource
@@ -32,14 +33,14 @@ abstract class PostgresTestcontainerBase {
         // Relax fail-fast to allow the container/DB to finish warming up on slow CI runners.
         registry.add("spring.datasource.hikari.initializationFailTimeout", () -> "-1");
         registry.add("spring.datasource.hikari.connectionTimeout", () -> "30000");
-        // Validate quicker so closed connections are detected fast during startup.
-        registry.add("spring.datasource.hikari.validationTimeout", () -> "2000");
+        // Give more time for validation to avoid false-positive closed connection warnings.
+        registry.add("spring.datasource.hikari.validationTimeout", () -> "10000");
         registry.add("spring.datasource.hikari.maximumPoolSize", () -> "5");
         registry.add("spring.datasource.hikari.minimumIdle", () -> "0");
-        registry.add("spring.datasource.hikari.idleTimeout", () -> "10000");
-        // Use a shorter maxLifetime to avoid handing out connections that the DB may have closed.
-        registry.add("spring.datasource.hikari.maxLifetime", () -> "14000");
-        registry.add("spring.datasource.hikari.keepaliveTime", () -> "15000");
+        registry.add("spring.datasource.hikari.idleTimeout", () -> "60000");
+        // Increase maxLifetime to avoid premature connection recycling during slow container startup.
+        registry.add("spring.datasource.hikari.maxLifetime", () -> "120000");
+        registry.add("spring.datasource.hikari.keepaliveTime", () -> "0");
 
         // Ensure Flyway runs against the same container DB.
         registry.add("spring.flyway.url", POSTGRES::getJdbcUrl);
