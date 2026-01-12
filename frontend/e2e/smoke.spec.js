@@ -47,6 +47,16 @@ test('smoke: create team -> view tasks -> create task -> change status', async (
   await teamCard.getByRole('button', { name: /view tasks/i }).click()
   await expect(page).toHaveURL(/\/tasks\?teamId=\d+/)
 
+  // Important: wait for the Tasks page initial load to finish, otherwise the
+  // async loader can overwrite the task list after we submit the create form.
+  await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible()
+  await expect(page.getByText(/posting into team view/i)).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByText(/loading tasks/i)).toHaveCount(0, { timeout: 30_000 })
+
+  const teamId = new URL(page.url()).searchParams.get('teamId')
+  expect(teamId, 'Expected teamId query param on /tasks page').toBeTruthy()
+  await expect(page.locator('#task-create-team')).toHaveValue(teamId, { timeout: 30_000 })
+
   // Create task (inside Create task card)
   const taskTitle = `E2E Task ${Date.now()}`
   await page.getByLabel('Title').fill(taskTitle)
@@ -60,14 +70,29 @@ test('smoke: create team -> view tasks -> create task -> change status', async (
       res.status() < 300
     )
   })
+
+  const reloadTasksResponsePromise = page.waitForResponse((res) => {
+    return (
+      res.url().includes(`/api/tasks/team/${teamId}`) &&
+      res.request().method() === 'GET' &&
+      res.status() >= 200 &&
+      res.status() < 300
+    )
+  })
+
   await page.getByRole('button', { name: /^create$/i }).click()
-  const createTaskResponse = await createTaskResponsePromise
+  const [createTaskResponse] = await Promise.all([
+    createTaskResponsePromise,
+    reloadTasksResponsePromise,
+  ])
   expect(createTaskResponse.ok()).toBeTruthy()
+
+  await expect(page.getByRole('status')).toContainText(/task created/i)
 
   // Verify task appears
   const taskCard = page.locator('.card-surface', { hasText: taskTitle }).first()
   console.log('Checking for taskCard with title:', taskTitle)
-  await expect(taskCard).toBeVisible({ timeout: 20000 })
+  await expect(taskCard).toBeVisible({ timeout: 30_000 })
 
   // Verify assignee visible (creator assigned by UI)
   await expect(taskCard.getByText(/assignees/i)).toBeVisible()
