@@ -37,15 +37,28 @@ class AuthIntegrationTest extends PostgresTestcontainerBase {
                         throw new IllegalStateException("No DataSource available for integration test cleanup");
                 }
 
-                try (Connection ignored = ds.getConnection()) {
-                        jdbcTemplate.update("DELETE FROM tasks");
-                        jdbcTemplate.update("DELETE FROM teams_members");
-                        jdbcTemplate.update("DELETE FROM teams");
-                        jdbcTemplate.update("DELETE FROM users_roles");
-                        jdbcTemplate.update("DELETE FROM users");
-                        jdbcTemplate.update("DELETE FROM roles");
-                } catch (SQLException e) {
-                        throw new RuntimeException("Could not clean database before tests", e);
+                int attempts = 0;
+                while (attempts < 5) {
+                        try (Connection ignored = ds.getConnection()) {
+                                jdbcTemplate.update("DELETE FROM tasks");
+                                jdbcTemplate.update("DELETE FROM teams_members");
+                                jdbcTemplate.update("DELETE FROM teams");
+                                jdbcTemplate.update("DELETE FROM users_roles");
+                                jdbcTemplate.update("DELETE FROM users");
+                                jdbcTemplate.update("DELETE FROM roles");
+                                return;
+                        } catch (SQLException e) {
+                                attempts++;
+                                if (attempts >= 5) {
+                                        throw new RuntimeException("Could not clean database before tests", e);
+                                }
+                                try {
+                                        Thread.sleep(2000);
+                                } catch (InterruptedException ie) {
+                                        Thread.currentThread().interrupt();
+                                        throw new RuntimeException("Interrupted while waiting to retry DB cleanup", ie);
+                                }
+                        }
                 }
     }
 

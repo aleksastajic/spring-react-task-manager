@@ -81,8 +81,13 @@ jobs:
         run: |
           docker compose up -d db backend
           # Wait until the backend is reachable before running E2E.
-          curl --retry 30 --retry-delay 2 --retry-connrefuse --silent --fail http://localhost:8080/v3/api-docs > /dev/null
-          echo "Backend is up"
+          if curl --retry 60 --retry-delay 3 --retry-connrefuse --silent --fail http://localhost:8080/v3/api-docs > /dev/null; then
+            echo "Backend is up"
+          else
+            echo "Backend did not become ready in time" >&2
+            docker compose logs backend --no-color || true
+            exit 1
+          fi
 
       - name: Install frontend dependencies
         working-directory: frontend

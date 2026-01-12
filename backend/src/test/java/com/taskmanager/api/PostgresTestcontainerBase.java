@@ -25,6 +25,12 @@ abstract class PostgresTestcontainerBase {
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
 
+        // Reduce flakiness during container startup on CI runners.
+        registry.add("spring.datasource.hikari.initializationFailTimeout", () -> "60000");
+        registry.add("spring.datasource.hikari.connectionTimeout", () -> "30000");
+        registry.add("spring.datasource.hikari.validationTimeout", () -> "5000");
+        registry.add("spring.datasource.hikari.maximumPoolSize", () -> "5");
+
         // Ensure Flyway runs against the same container DB.
         registry.add("spring.flyway.url", POSTGRES::getJdbcUrl);
         registry.add("spring.flyway.user", POSTGRES::getUsername);
