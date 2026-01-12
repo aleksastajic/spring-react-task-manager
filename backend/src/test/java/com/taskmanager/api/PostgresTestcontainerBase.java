@@ -36,17 +36,20 @@ abstract class PostgresTestcontainerBase {
         registry.add("spring.datasource.password", POSTGRES::getPassword);
 
         // Reduce flakiness during container startup on CI runners.
-        // Relax fail-fast to allow the container/DB to finish warming up on slow CI runners.
+        // Disable fail-fast and prevent eager connection initialization.
         registry.add("spring.datasource.hikari.initializationFailTimeout", () -> "-1");
         registry.add("spring.datasource.hikari.connectionTimeout", () -> "30000");
-        // Give more time for validation to avoid false-positive closed connection warnings.
         registry.add("spring.datasource.hikari.validationTimeout", () -> "10000");
         registry.add("spring.datasource.hikari.maximumPoolSize", () -> "5");
+        // Set to 0 to prevent Hikari from creating connections during pool startup
         registry.add("spring.datasource.hikari.minimumIdle", () -> "0");
         registry.add("spring.datasource.hikari.idleTimeout", () -> "60000");
-        // Increase maxLifetime to avoid premature connection recycling during slow container startup.
         registry.add("spring.datasource.hikari.maxLifetime", () -> "120000");
         registry.add("spring.datasource.hikari.keepaliveTime", () -> "0");
+        // Disable connection test query to avoid validation attempts during pool startup
+        registry.add("spring.datasource.hikari.connectionTestQuery", () -> "");
+        // Allow lazy initialization - connections created only when needed
+        registry.add("spring.jpa.properties.hibernate.temp.use_jdbc_metadata_defaults", () -> "false");
 
         // Ensure Flyway runs against the same container DB.
         registry.add("spring.flyway.url", POSTGRES::getJdbcUrl);
