@@ -2,6 +2,19 @@
 
 Full‑stack task manager with JWT authentication, teams, and tasks.
 
+TL;DR
+Full‑stack task manager (React + Vite frontend, Spring Boot backend) demonstrating JWT auth, teams, tasks, and end-to-end smoke tests.
+
+## Highlights
+- Full-stack: React/Vite frontend with Playwright smoke tests and a Spring Boot backend with Flyway migrations.
+- Dev experience focus: Docker Compose for a one-command local demo, dev seeding, and test‑friendly configs.
+- Authentication & APIs: JWT-based security plus OpenAPI for easy exploration.
+
+## What I learned
+- Integrating Playwright smoke tests into the dev lifecycle to validate main user flows.
+- Configuring Vite proxy to develop frontend without changing backend URLs.
+- Best practices for dev seeding so E2E tests and having stable demo credentials.
+
 ## Tech Stack
 
 **Backend**
