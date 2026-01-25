@@ -94,16 +94,16 @@ URLs:
 ## Screenshots
 
 <p align="center">
-	<img src="frontend/public/assets/screenshots/dashboard.png" alt="Dashboard - Task manager" width="1000" />
+	<img src="frontend/public/assets/screenshots/02-dashboardpage.png" alt="Dashboard - Task manager" width="1000" />
 </p>
 
 ## Quick Gallery
 
 <p align="center">
-	<img src="frontend/public/assets/screenshots/login.png" alt="Login" width="240" />
-	<img src="frontend/public/assets/screenshots/dashboard.png" alt="Dashboard" width="240" />
-	<img src="frontend/public/assets/screenshots/teams.png" alt="Teams" width="240" />
-	<img src="frontend/public/assets/screenshots/tasks.png" alt="Tasks" width="240" />
+	<img src="frontend/public/assets/screenshots/01-loginform.png" alt="Login" width="240" />
+	<img src="frontend/public/assets/screenshots/02-dashboardpage.png" alt="Dashboard" width="240" />
+	<img src="frontend/public/assets/screenshots/03-teamspage.png" alt="Teams" width="240" />
+	<img src="frontend/public/assets/screenshots/04-taskspage.png" alt="Tasks" width="240" />
 </p>
 
 _Captions:_ Login • Dashboard • Teams • Tasks
