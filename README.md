@@ -94,19 +94,47 @@ URLs:
 ## Screenshots
 
 <p align="center">
-	<img src="frontend/public/assets/screenshots/02-dashboardpage.png" alt="Dashboard - Task manager" width="1000" />
+  <img src="frontend/public/assets/screenshots/02-dashboardpage.png" alt="Dashboard - Task manager" width="1000" />
 </p>
 
 ## Quick Gallery
 
 <p align="center">
-	<img src="frontend/public/assets/screenshots/01-loginform.png" alt="Login" width="240" />
-	<img src="frontend/public/assets/screenshots/02-dashboardpage.png" alt="Dashboard" width="240" />
-	<img src="frontend/public/assets/screenshots/03-teamspage.png" alt="Teams" width="240" />
-	<img src="frontend/public/assets/screenshots/04-taskspage.png" alt="Tasks" width="240" />
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://raw.githubusercontent.com/aleksastajic/spring-react-task-manager/main/frontend/public/assets/screenshots/01-loginform.png">
+        <img src="frontend/public/assets/screenshots/01-loginform.png" alt="Login" width="240" />
+      </a><br/>
+      <small>Login form</small>
+    </td>
+    <td align="center">
+      <a href="https://raw.githubusercontent.com/aleksastajic/spring-react-task-manager/main/frontend/public/assets/screenshots/02-dashboardpage.png">
+        <img src="frontend/public/assets/screenshots/02-dashboardpage.png" alt="Dashboard" width="240" />
+      </a><br/>
+      <small>Dashboard</small>
+    </td>
+	<td align="center">
+      <a href="https://raw.githubusercontent.com/aleksastajic/spring-react-task-manager/main/frontend/public/assets/screenshots/03-teamspage.png">
+        <img src="frontend/public/assets/screenshots/03-teamspage.png" alt="Teams" width="240" />
+      </a><br/>
+      <small>Teams</small>
+    </td>
+    <td align="center">
+      <a href="https://raw.githubusercontent.com/aleksastajic/spring-react-task-manager/main/frontend/public/assets/screenshots/04-taskspage.png">
+        <img src="frontend/public/assets/screenshots/04-taskspage.png" alt="Tasks" width="240" />
+      </a><br/>
+      <small>Tasks</small>
+    </td>
+	<td align="center">
+      <a href="https://raw.githubusercontent.com/aleksastajic/spring-react-task-manager/main/frontend/public/assets/screenshots/05-profile.png">
+        <img src="frontend/public/assets/screenshots/05-profile.png" alt="Profile" width="240" />
+      </a><br/>
+      <small>Profile</small>
+    </td>
+  </tr>
+</table>
 </p>
-
-_Captions:_ Login • Dashboard • Teams • Tasks
 
 Notes:
 - The backend uses Flyway migrations automatically.
