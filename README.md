@@ -1,293 +1,138 @@
 # Task Manager (Spring Boot + React)
 
-Full‑stack task manager with JWT authentication, teams, and tasks.
+## 1) Overview
 
-TL;DR
-Full‑stack task manager (React + Vite frontend, Spring Boot backend) demonstrating JWT auth, teams, tasks, and end-to-end smoke tests.
+Full-stack task manager with a Spring Boot API (JWT auth + Flyway/Postgres) and a React + Vite frontend.
 
-## Highlights
-- Full-stack: React/Vite frontend with Playwright smoke tests and a Spring Boot backend with Flyway migrations.
-- Dev experience focus: Docker Compose for a one-command local demo, dev seeding, and test‑friendly configs.
-- Authentication & APIs: JWT-based security plus OpenAPI for easy exploration.
+## 2) What it demonstrates
 
-## What I learned
-- Integrating Playwright smoke tests into the dev lifecycle to validate main user flows.
-- Configuring Vite proxy to develop frontend without changing backend URLs.
-- Best practices for dev seeding so E2E tests and having stable demo credentials.
+- JWT authentication (login/register) with a stateless Spring Security filter chain
+- Full-stack workflow: teams + tasks CRUD, assignment, and status changes
+- Database migrations via Flyway and a real Postgres database
+- One-command local dev stack via Docker Compose (frontend + backend + db)
+- End-to-end smoke tests with Playwright
 
-## Tech Stack
-
-**Backend**
-- Java 17, Spring Boot
-- Spring Security (JWT)
-- Spring Data JPA (Hibernate)
-- Flyway migrations
-- PostgreSQL
-- OpenAPI/Swagger via springdoc
-
-**Frontend**
-- React + Vite
-- React Router
-- Tailwind CSS
-
-## Features
-
-- Authentication: register/login, JWT‑protected API
-- Users: view/update/delete current profile
-- Teams: create/update/delete, manage membership, list teams by user
-- Tasks: create/update/delete, assign/unassign, status changes, list by team/user
-- Dev experience: Flyway migrations + dev-only seed data
-
-## Run Locally
+## 3) Quickstart (Docker Compose)
 
 ### Prerequisites
 
-- Java 17+
-- Node.js 18+ (or 20+)
-- PostgreSQL (recommended: 16+)
+- Docker Engine / Docker Desktop
+- Docker Compose v2 (`docker compose`)
 
-### Docker Compose (Recommended)
-
-Starts Postgres + backend (Spring Boot) + frontend (Vite).
+### Start
 
 ```bash
 cp .env.example .env
-docker compose up
+docker compose up -d --build
+
+# follow logs (Ctrl+C to stop following)
+docker compose logs -f
 ```
 
-To rebuild after code changes:
+Notes:
+- If you prefer running in the foreground, omit `-d`.
+- If you change code and want to rebuild images, re-run with `--build`.
+- First run can take a bit (backend runs via Maven and downloads dependencies into the Compose volume cache).
+- Compose defaults to `SPRING_PROFILES_ACTIVE=dev`.
+
+### Stop
+
+```bash
+docker compose down
+```
+
+### Clean reset (delete DB volume)
+
+```bash
+docker compose down -v
+```
+
+Environment variables (optional) are documented in [.env.example](.env.example). Common ones:
+- `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_PORT`
+- `SPRING_PROFILES_ACTIVE`
+- `JWT_SECRET`, `JWT_EXPIRATION`, `CORS_ALLOWED_ORIGINS`
+- `VITE_PROXY_TARGET`
+
+### URLs
+
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8080
+- Swagger UI: http://localhost:8080/swagger-ui/index.html
+- OpenAPI JSON: http://localhost:8080/v3/api-docs
+
+## 4) Demo (2 minutes)
+
+1. Start the stack using the Quickstart above.
+2. Open the app at http://localhost:5173.
+3. Login:
+   - When running with the `dev` profile (Compose default), the backend seeds demo users in [backend/src/main/java/com/taskmanager/api/config/DevDataSeeder.java](backend/src/main/java/com/taskmanager/api/config/DevDataSeeder.java).
+   - Demo users (password is `password`): `alice`, `bob`, `charlie`, `dana`.
+   - If you’re not running the `dev` profile, create an account via the UI at `/register`.
+4. Click **Teams** → **New Team** → create a team.
+5. From the new team card, click **View Tasks**, then create a task and change its status.
+6. Optional: open Swagger UI and try the auth endpoints and task endpoints.
+
+## 5) Tests
+
+### Backend (JUnit)
+
+```bash
+cd backend
+./mvnw -B test
+```
+
+Note: some Testcontainers-based integration tests are currently annotated with `@Disabled(...)` due to CI timing flakiness:
+- [backend/src/test/java/com/taskmanager/api/AuthIntegrationTest.java](backend/src/test/java/com/taskmanager/api/AuthIntegrationTest.java)
+- [backend/src/test/java/com/taskmanager/api/TeamTaskIntegrationTest.java](backend/src/test/java/com/taskmanager/api/TeamTaskIntegrationTest.java)
+- [backend/src/test/java/com/taskmanager/api/TaskManagerApiApplicationTests.java](backend/src/test/java/com/taskmanager/api/TaskManagerApiApplicationTests.java)
+
+### E2E (Playwright smoke)
+
+Prereqs:
+- Backend reachable at http://localhost:8080 (Quickstart Compose is the easiest way)
+
+```bash
+cd frontend
+npm ci
+npm run e2e:install
+npm run e2e
+```
+
+The smoke tests live in `frontend/e2e/smoke.spec.js` and cover:
+- Login
+- Create team → view tasks → create task → change status
+
+Optional env vars:
+- `E2E_USERNAME` / `E2E_PASSWORD` (defaults to `alice/password`)
+- `PLAYWRIGHT_BASE_URL` (defaults to http://localhost:5173)
+
+## 6) Project structure
+
+- [backend/](backend/) — Spring Boot API
+- [frontend/](frontend/) — React + Vite UI
+- [docker-compose.yml](docker-compose.yml) — local dev stack (db + backend + frontend)
+- [frontend/e2e/](frontend/e2e/) — Playwright tests
+- [backend/src/main/resources/db/migration/active/](backend/src/main/resources/db/migration/active/) — Flyway migrations
+
+## 7) Troubleshooting
+
+- Port conflicts:
+	- Frontend uses `5173`
+	- Backend uses `8080`
+	- Postgres maps to host port `5433` by default (override `POSTGRES_PORT` in `.env`)
+- Rebuild containers after dependency changes:
 
 ```bash
 docker compose down
 docker compose up --build
 ```
 
-Common Docker lifecycle commands:
+- Reset the DB volume (re-runs migrations + dev seed on next start):
 
 ```bash
-# Stop containers (keeps DB volume/data)
-docker compose stop
-
-# Start containers again
-docker compose start
-
-# Stop + remove containers (keeps volumes by default)
-docker compose down
-
-# Full reset (removes DB volume/data; dev seeder will repopulate)
 docker compose down -v
+docker compose up
 ```
 
-Auto-start on reboot:
-- By default, Docker Compose does not set a restart policy.
-- If you want containers to automatically start when the Docker daemon starts, add `restart: unless-stopped` to each service in `docker-compose.yml`.
-- On Linux, you also need Docker enabled at boot (e.g. `systemctl enable --now docker`).
-
-Database port note:
-- This repo’s Compose defaults the Postgres host port to `5433` to avoid conflicts with a locally-installed Postgres.
-- You can override with `POSTGRES_PORT=5432` in `.env` if `5432` is free.
-
-URLs:
-- Frontend: `http://localhost:5173`
-- Backend: `http://localhost:8080`
-
-## Screenshots
-
-<p align="center">
-  <img src="frontend/public/assets/screenshots/02-dashboardpage.png" alt="Dashboard - Task manager" width="1000" />
-</p>
-
-## Quick Gallery
-
-<p align="center">
-<table>
-  <tr>
-    <td align="center">
-      <a href="https://raw.githubusercontent.com/aleksastajic/spring-react-task-manager/main/frontend/public/assets/screenshots/01-loginform.png">
-        <img src="frontend/public/assets/screenshots/01-loginform.png" alt="Login" width="240" />
-      </a><br/>
-      <small>Login form</small>
-    </td>
-    <td align="center">
-      <a href="https://raw.githubusercontent.com/aleksastajic/spring-react-task-manager/main/frontend/public/assets/screenshots/02-dashboardpage.png">
-        <img src="frontend/public/assets/screenshots/02-dashboardpage.png" alt="Dashboard" width="240" />
-      </a><br/>
-      <small>Dashboard</small>
-    </td>
-	<td align="center">
-      <a href="https://raw.githubusercontent.com/aleksastajic/spring-react-task-manager/main/frontend/public/assets/screenshots/03-teamspage.png">
-        <img src="frontend/public/assets/screenshots/03-teamspage.png" alt="Teams" width="240" />
-      </a><br/>
-      <small>Teams</small>
-    </td>
-    <td align="center">
-      <a href="https://raw.githubusercontent.com/aleksastajic/spring-react-task-manager/main/frontend/public/assets/screenshots/04-taskspage.png">
-        <img src="frontend/public/assets/screenshots/04-taskspage.png" alt="Tasks" width="240" />
-      </a><br/>
-      <small>Tasks</small>
-    </td>
-	<td align="center">
-      <a href="https://raw.githubusercontent.com/aleksastajic/spring-react-task-manager/main/frontend/public/assets/screenshots/05-profile.png">
-        <img src="frontend/public/assets/screenshots/05-profile.png" alt="Profile" width="240" />
-      </a><br/>
-      <small>Profile</small>
-    </td>
-  </tr>
-</table>
-</p>
-
-Notes:
-- The backend uses Flyway migrations automatically.
-- The `dev` profile seeds demo data and keeps demo credentials present even if you’re using a persistent DB volume.
-- CORS allowlist is configurable via `CORS_ALLOWED_ORIGINS`.
-- When running the frontend in Docker, Vite proxies `/api` to the backend using `VITE_PROXY_TARGET` (set in `docker-compose.yml`).
-
-### Backend
-
-1. Create a database (default is `taskmanager_db`).
-2. Configure the backend (defaults are fine for local dev):
-
-Environment variables supported by the backend:
-
-- `DB_URL` (default: `jdbc:postgresql://localhost:5432/taskmanager_db`)
-- `DB_USERNAME` (default: `postgres`)
-- `DB_PASSWORD` (default: `postgres`)
-- `JWT_SECRET` (default: a dev-only value; can be a plain string or Base64/Base64URL)
-- `JWT_EXPIRATION` (default: `86400000` ms)
-- `CORS_ALLOWED_ORIGINS` (default: `*`)
-
-3. Run the API (dev profile enables seeded demo data):
-
-```bash
-cd backend
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
-# or
-SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
-```
-
-API base URL: `http://localhost:8080`
-
-Swagger UI:
-- `http://localhost:8080/swagger-ui/index.html`
-
-OpenAPI JSON:
-- `http://localhost:8080/v3/api-docs`
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-App URL: `http://localhost:5173`
-
-The Vite dev server proxies `/api` to `http://localhost:8080`.
-
-If you host the backend elsewhere, set `VITE_API_BASE` (e.g. `https://your-api.example.com/api`).
-
-## Database Migrations (Flyway)
-
-- Flyway is enabled by default.
-- Active migrations are in `backend/src/main/resources/db/migration/active/`.
-- Hibernate auto-ddl is disabled (`spring.jpa.hibernate.ddl-auto=none`).
-
-## Development Seed Data
-
-When running with the `dev` profile, a dev-only seeder upserts demo users/teams/tasks so onboarding and E2E have stable credentials (even when using a persistent DB volume):
-
-- `backend/src/main/java/com/taskmanager/api/config/DevDataSeeder.java`
-
-Seeded demo credentials:
-
-- `alice` / `password` (ROLE_USER)
-- `bob` / `password` (ROLE_ADMIN + ROLE_USER)
-- `charlie` / `password` (ROLE_USER)
-- `dana` / `password` (ROLE_USER)
-
-## Scripts
-
-Backend helper scripts (write logs to `logs/`):
-
-```bash
-cd backend
-./scripts/run-build-log.sh
-./scripts/run-tests-log.sh
-```
-
-Repo health checks (writes a combined log to `logs/`):
-
-```bash
-./scripts/run-checks-log.sh --all
-
-# or run individual checks
-./scripts/run-checks-log.sh --frontend-lint
-./scripts/run-checks-log.sh --backend-test
-./scripts/run-checks-log.sh --compose-config
-```
-
-E2E helper script (writes logs to `logs/`):
-
-```bash
-./scripts/run-e2e-log.sh
-```
-
-Frontend scripts:
-
-```bash
-cd frontend
-npm run dev
-npm run build
-npm run lint
-
-# one-time browser install (CI runners do this automatically)
-npm run e2e:install
-
-# run Playwright smoke tests
-npm run e2e
-```
-
-## E2E Smoke Tests (Playwright)
-
-The smoke tests validate the main user flows (login, teams, tasks) in a real browser.
-
-Prereqs:
-- App running locally (recommended: `docker compose up` from repo root)
-- Frontend reachable at `http://localhost:5173`
-- Backend reachable at `http://localhost:8080`
-
-Run:
-
-```bash
-cd frontend
-npm run e2e:install
-npm run e2e
-```
-
-Optional env vars:
-- `E2E_USERNAME` / `E2E_PASSWORD` (defaults to the seeded `alice/password`)
-- `PLAYWRIGHT_BASE_URL` (defaults to `http://localhost:5173`)
-
-## Backend Integration Tests (Testcontainers)
-
-Some backend integration tests use Testcontainers PostgreSQL so CI can run against a clean, real database.
-
-- Requires Docker to be available on the machine running tests.
-- Locally, tests are configured to skip when Docker isn’t available.
-
-## Project Layout
-
-See [STRUCTURE.md](STRUCTURE.md) for a detailed overview of the backend and frontend folders.
-
-## Possible Future Improvements
-
-- Add refresh tokens + token rotation (or switch to HttpOnly cookie auth)
-- Add pagination/filtering/sorting for tasks and teams
-- Add task comments, attachments, and audit history
-- Add notifications (email or in-app) for due/overdue tasks
-- Add real-time updates (WebSockets/SSE) for team/task changes
-- Hardening: rate limiting, stricter CORS defaults, security headers, improved validation
-- Observability: structured logging, metrics, tracing, health dashboards
-- Production Docker images (multi-stage builds) + `docker compose` prod profile
-- CI enhancements: coverage thresholds, dependency scanning, release/versioning
+- Running the frontend outside Docker:
+  - Vite proxies `/api` to `VITE_PROXY_TARGET` (defaults to `http://localhost:8080`).
